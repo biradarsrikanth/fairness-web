@@ -18,6 +18,12 @@
     />
   </head>
   <body>
-    <app-root></app-root>
+    <app-root>
+      <!-- Shown until bootstrap, which waits for the session to be restored; Angular replaces it -->
+      <div class="boot" role="status">
+        <div class="boot-spinner" aria-hidden="true"></div>
+        <span>Loading Fairness…</span>
+      </div>
+    </app-root>
   </body>
 </html>
