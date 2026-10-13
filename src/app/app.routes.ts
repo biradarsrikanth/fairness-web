@@ -77,7 +77,12 @@ export const routes: Routes = [
         canActivate: [roleGuard(...MANAGERS)],
         loadComponent: () => import('./features/teams/teams-page').then((m) => m.TeamsPage),
       },
-      upcoming('admin/users', 'Users', 'User management arrives in Group 10.', ADMINS),
+      {
+        path: 'admin/users',
+        title: 'Users · Fairness',
+        canActivate: [roleGuard(...ADMINS)],
+        loadComponent: () => import('./features/admin/users/users-page').then((m) => m.UsersPage),
+      },
       upcoming(
         'admin/sync',
         'PagerDuty sync',

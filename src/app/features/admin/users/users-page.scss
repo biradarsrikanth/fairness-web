@@ -1,0 +1,34 @@
+.search {
+  width: 280px;
+  max-width: 100%;
+}
+
+.small {
+  font: var(--mat-sys-body-small);
+}
+
+.warning {
+  color: var(--delta-bad);
+}
+
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--mat-sys-surface-container-high);
+  font: var(--mat-sys-label-medium);
+  white-space: nowrap;
+
+  &.on {
+    background: color-mix(in srgb, var(--status-good) 14%, transparent);
+  }
+
+  &.warn {
+    background: color-mix(in srgb, var(--status-warning) 22%, transparent);
+  }
+
+  &.off {
+    background: var(--mat-sys-surface-container-highest);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}

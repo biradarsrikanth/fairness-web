@@ -1,0 +1,91 @@
+<h2 mat-dialog-title>{{ editing ? 'Edit ' + editing.fullName : 'Add a user' }}</h2>
+<form novalidate (submit)="save($event)">
+  <mat-dialog-content>
+    <mat-form-field appearance="outline">
+      <mat-label>Role</mat-label>
+      <mat-select [formField]="userForm.role">
+        @for (role of roles; track role.value) {
+          <mat-option [value]="role.value">{{ role.label }}</mat-option>
+        }
+      </mat-select>
+      @for (role of roles; track role.value) {
+        @if (role.value === model().role) {
+          <mat-hint>Sees: {{ role.description }}</mat-hint>
+        }
+      }
+    </mat-form-field>
+
+    @if (!userForm.engineerId().hidden()) {
+      <mat-form-field appearance="outline">
+        <mat-label>Engineer</mat-label>
+        <mat-select
+          [formField]="userForm.engineerId"
+          (selectionChange)="pickEngineer($event.value)"
+        >
+          @if (engineers.hasValue()) {
+            @for (engineer of engineers.value()!.content; track engineer.id) {
+              <mat-option [value]="engineer.id"
+                >{{ engineer.name }} · {{ engineer.team }}</mat-option
+              >
+            }
+          }
+        </mat-select>
+        <mat-hint>An engineer has at most one login</mat-hint>
+        @if (firstError(userForm.engineerId); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+      <input matInput autocomplete="off" [formField]="userForm.fullName" />
+      @if (firstError(userForm.fullName); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" autocomplete="off" [formField]="userForm.email" />
+      <mat-hint>They sign in with it</mat-hint>
+      @if (firstError(userForm.email); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    @if (!editing && !userForm.teamIds().hidden()) {
+      <mat-form-field appearance="outline">
+        <mat-label>Teams</mat-label>
+        <mat-select multiple [formField]="userForm.teamIds">
+          @if (teams.hasValue()) {
+            @for (team of teams.value(); track team.id) {
+              <mat-option [value]="team.id">{{ team.name }}</mat-option>
+            }
+          }
+        </mat-select>
+        <mat-hint>The teams they see; change them later from Teams</mat-hint>
+        @if (firstError(userForm.teamIds); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    @if (editing) {
+      <mat-checkbox [formField]="userForm.enabled">Can sign in</mat-checkbox>
+      @if (endsSessions()) {
+        <p class="hint" role="status">Saving signs them out everywhere.</p>
+      }
+    }
+
+    @if (formError(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close>Cancel</button>
+    <button matButton="filled" type="submit" [disabled]="userForm().submitting()">
+      {{ userForm().submitting() ? 'Saving…' : editing ? 'Save' : 'Add user' }}
+    </button>
+  </mat-dialog-actions>
+</form>

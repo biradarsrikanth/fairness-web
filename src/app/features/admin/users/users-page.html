@@ -1,0 +1,184 @@
+<div class="page">
+  <div class="page-bar">
+    <h1>Users</h1>
+    <button matButton="filled" type="button" (click)="edit()">
+      <mat-icon>person_add</mat-icon>
+      Add user
+    </button>
+  </div>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search">
+      <mat-label>Search</mat-label>
+      <mat-icon matIconPrefix>search</mat-icon>
+      <input
+        matInput
+        type="search"
+        placeholder="Name or email"
+        [value]="query() ?? ''"
+        (input)="search($any($event.target).value)"
+      />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Role</mat-label>
+      <mat-select [value]="roleFilter() ?? ''" (selectionChange)="setFilter('role', $event.value)">
+        <mat-option value="">Any role</mat-option>
+        @for (role of roles; track role.value) {
+          <mat-option [value]="role.value">{{ role.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Show</mat-label>
+      <mat-select
+        [value]="enabledFilter() ?? ''"
+        (selectionChange)="setFilter('enabled', $event.value)"
+      >
+        <mat-option value="">Everyone</mat-option>
+        <mat-option value="true">Can sign in</mat-option>
+        <mat-option value="false">Disabled</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (error()) {
+    <div class="page-problem" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      <span>Couldn't load users. {{ error() }}</span>
+      <button matButton type="button" (click)="users.reload()">Try again</button>
+    </div>
+  }
+
+  @if (data(); as page) {
+    <section class="panel" [style.opacity]="users.isLoading() ? 0.55 : 1">
+      @if (page.content.length === 0) {
+        <p class="muted">No users match.</p>
+      } @else {
+        <div class="table-scroll">
+          <table
+            mat-table
+            matSort
+            [dataSource]="page.content"
+            [matSortActive]="matSort().active"
+            [matSortDirection]="matSort().direction"
+            (matSortChange)="sorted($event)"
+            aria-label="Users"
+          >
+            <ng-container matColumnDef="fullName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>User</th>
+              <td mat-cell *matCellDef="let user">
+                <div class="name">
+                  {{ user.fullName }}
+                  @if (user.id === myId()) {
+                    <span class="muted"> (you)</span>
+                  }
+                </div>
+                <div class="muted small">{{ user.email }}</div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="role">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Role</th>
+              <td mat-cell *matCellDef="let user">{{ roleLabel(user.role) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="access">
+              <th mat-header-cell *matHeaderCellDef>Sees</th>
+              <td mat-cell *matCellDef="let user">
+                @switch (user.role) {
+                  @case ('ADMIN') {
+                    <span class="muted">Everything</span>
+                  }
+                  @case ('MANAGER') {
+                    @if (user.teams.length === 0) {
+                      <span class="warning">No teams yet</span>
+                    } @else {
+                      @for (team of user.teams; track team.id; let last = $last) {
+                        {{ team.name }}{{ last ? '' : ', ' }}
+                      }
+                    }
+                  }
+                  @default {
+                    {{ user.engineerName ?? 'Engineer ' + user.engineerId }}
+                  }
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let user">
+                @if (!user.enabled) {
+                  <span class="tag off">Disabled</span>
+                } @else if (isLocked(user)) {
+                  <span class="tag warn">Locked until {{ when(user.lockedUntil) }}</span>
+                } @else if (user.mustChangePassword) {
+                  <span class="tag">Hasn't chosen a password</span>
+                } @else {
+                  <span class="tag on">Active</span>
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="lastLoginAt">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc">Last sign-in</th>
+              <td mat-cell *matCellDef="let user" class="nowrap">{{ when(user.lastLoginAt) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>
+                <span class="visually-hidden">Actions</span>
+              </th>
+              <td mat-cell *matCellDef="let user" class="num">
+                <button
+                  matIconButton
+                  type="button"
+                  [matMenuTriggerFor]="menu"
+                  [attr.aria-label]="'Actions for ' + user.fullName"
+                >
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #menu="matMenu" xPosition="before">
+                  <button mat-menu-item type="button" (click)="edit(user)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit</span>
+                  </button>
+                  @if (user.role === 'MANAGER') {
+                    <button mat-menu-item type="button" (click)="editTeams(user)">
+                      <mat-icon>groups</mat-icon>
+                      <span>Teams</span>
+                    </button>
+                  }
+                  @if (isLocked(user)) {
+                    <button mat-menu-item type="button" (click)="unlock(user)">
+                      <mat-icon>lock_open</mat-icon>
+                      <span>Unlock</span>
+                    </button>
+                  }
+                  <button mat-menu-item type="button" (click)="resetPassword(user)">
+                    <mat-icon>key</mat-icon>
+                    <span>Reset password</span>
+                  </button>
+                  @if (user.id !== myId()) {
+                    <button mat-menu-item type="button" (click)="remove(user)">
+                      <mat-icon>delete</mat-icon>
+                      <span>Delete</span>
+                    </button>
+                  }
+                </mat-menu>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columns"></tr>
+            <tr mat-row *matRowDef="let user; columns: columns"></tr>
+          </table>
+        </div>
+      }
+      <mat-paginator
+        [length]="page.totalElements"
+        [pageIndex]="page.page"
+        [pageSize]="page.size"
+        [pageSizeOptions]="pageSizes"
+        (page)="paged($event)"
+        aria-label="Pages of users"
+      />
+    </section>
+  } @else if (users.isLoading()) {
+    <p class="muted" role="status">Loading users…</p>
+  }
+</div>
