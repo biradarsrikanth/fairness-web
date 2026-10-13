@@ -1,0 +1,5344 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Fairness Checker API",
+    "description": "On-call fairness and burnout tracking for PagerDuty. Sign in with POST /api/v1/auth/login, then send the accessToken as a Bearer token (in Swagger UI: Authorize). Every error is an ApiError (RFC 9457 problem details, application/problem+json); branch on its code.",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Engineers",
+      "description": "Engineers who go on call"
+    },
+    {
+      "name": "PagerDuty sync activity",
+      "description": "Sync runs and received webhooks (admins only)"
+    },
+    {
+      "name": "Audit",
+      "description": "Who did what: sign-ins, user changes, manual PagerDuty operations (admins only)"
+    },
+    {
+      "name": "PagerDuty",
+      "description": "Live PagerDuty data and manual syncs (admins only)"
+    },
+    {
+      "name": "Users",
+      "description": "Logins and what they may see (admins only)"
+    },
+    {
+      "name": "Analytics",
+      "description": "KPIs, alerts over time, weekday-hour heatmap, noisy services and trends"
+    },
+    {
+      "name": "Scores",
+      "description": "Fairness, burnout and time-of-day scores from the scorer service"
+    },
+    {
+      "name": "Webhooks",
+      "description": "PagerDuty webhook receiver (HMAC-signed)"
+    },
+    {
+      "name": "On-call",
+      "description": "On-call shifts synced from PagerDuty"
+    },
+    {
+      "name": "Auth",
+      "description": "Sign in and out, refresh the access token, change the password"
+    },
+    {
+      "name": "Alerts",
+      "description": "Stored alerts and their paging history"
+    },
+    {
+      "name": "Teams",
+      "description": "Teams and their timezones"
+    }
+  ],
+  "paths": {
+    "/api/v1/alerts": {
+      "get": {
+        "tags": [
+          "Alerts"
+        ],
+        "summary": "List alerts",
+        "description": "Filters combine with AND. Sort by triggeredAt (default, newest first), resolvedAt, severity or status.",
+        "operationId": "list_2",
+        "parameters": [
+          {
+            "name": "engineerId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "P1|P2|P3|P4|P5"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "triggered|acknowledged|resolved"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "default": [
+                "triggeredAt,DESC"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseAlertResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Alerts"
+        ],
+        "operationId": "saveAlert",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/alerts/{id}": {
+      "get": {
+        "tags": [
+          "Alerts"
+        ],
+        "operationId": "getById_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Alerts"
+        ],
+        "operationId": "deleteEvent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/alerts/{id}/assignments": {
+      "get": {
+        "tags": [
+          "Alerts"
+        ],
+        "operationId": "getAssignments",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Assignment"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/alerts/timeseries": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Alert counts per period, by severity",
+        "description": "Every period, quiet ones as zeros.",
+        "operationId": "alertsOverTime",
+        "parameters": [
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "day|week|month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeries"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/heatmap": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Alerts by weekday and hour",
+        "description": "In each team's own timezone; all 168 cells.",
+        "operationId": "heatmap",
+        "parameters": [
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "day|week|month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Heatmap"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/services/top": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "The ten services with the most alerts",
+        "operationId": "topServices",
+        "parameters": [
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "day|week|month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopServices"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/snapshot": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Everything above in one response",
+        "description": "What the page loads at once and the PDF and Excel reports are built from.",
+        "operationId": "snapshot",
+        "parameters": [
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "day|week|month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/summary": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "KPIs with the change from the previous period",
+        "description": "Alerts, MTTA, MTTR, after-hours %, escalation rate; Gini and high-risk engineers from the scorer when available.",
+        "operationId": "summary",
+        "parameters": [
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "day|week|month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Summary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/trend": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Gini and burnout per week or month",
+        "description": "From the scorer; weekly unless granularity=month or the window is longer than 110 weeks.",
+        "operationId": "trend",
+        "parameters": [
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "day|week|month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trend"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audit": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "summary": "List audit entries",
+        "description": "Newest first. Filters combine with AND.",
+        "operationId": "list_3",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LOGIN_SUCCEEDED",
+                "LOGIN_FAILED",
+                "ACCOUNT_LOCKED",
+                "LOGOUT",
+                "PASSWORD_CHANGED",
+                "REFRESH_TOKEN_REUSED",
+                "USER_CREATED",
+                "USER_UPDATED",
+                "USER_TEAMS_CHANGED",
+                "USER_PASSWORD_RESET",
+                "USER_UNLOCKED",
+                "USER_DELETED",
+                "SYNC_TRIGGERED",
+                "INCIDENT_RESOLVED",
+                "WEBHOOK_REPLAYED"
+              ]
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "default": [
+                "occurredAt,DESC"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseAuditEntryResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Change the password",
+        "description": "Signs out every other session and returns a fresh one.",
+        "operationId": "changePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Sign in",
+        "description": "Returns an access token and sets the refresh cookie. By default, 5 wrong passwords in a row lock the account for 15 minutes (423), and a client IP gets at most 10 attempts per minute (429). Both come with Retry-After.",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Sign out",
+        "description": "Ends this session (every token from this sign-in) and clears the cookie.",
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "refreshCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "The signed-in user, with the teams they can see",
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get a new access token",
+        "description": "Uses the refresh cookie, which is replaced. On failure the cookie is cleared: sign in again.",
+        "operationId": "refresh",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "refreshCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/engineers": {
+      "get": {
+        "tags": [
+          "Engineers"
+        ],
+        "summary": "List engineers",
+        "description": "Sort by name (default) or email.",
+        "operationId": "list_1",
+        "parameters": [
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "default": [
+                "name,ASC"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseEngineerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Engineers"
+        ],
+        "operationId": "saveEngineer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EngineerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/engineers/{id}": {
+      "get": {
+        "tags": [
+          "Engineers"
+        ],
+        "operationId": "getById_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Engineers"
+        ],
+        "operationId": "updateEngineer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EngineerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Engineers"
+        ],
+        "operationId": "deleteEngineer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/oncall": {
+      "get": {
+        "tags": [
+          "On-call"
+        ],
+        "summary": "List on-call shifts",
+        "description": "Shifts overlapping [start, end] (UTC dates, inclusive, at most 366 days apart), optionally for one engineer. Sort by startsAt (default) or endsAt.",
+        "operationId": "shifts",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "engineerId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "default": [
+                "startsAt,ASC"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseOncallShiftResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pagerduty/incidents": {
+      "get": {
+        "tags": [
+          "PagerDuty"
+        ],
+        "operationId": "getIncidents",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagerDutyResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pagerduty/resolve/{incidentId}": {
+      "post": {
+        "tags": [
+          "PagerDuty"
+        ],
+        "operationId": "resolveIncident",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pagerduty/sync": {
+      "post": {
+        "tags": [
+          "PagerDuty"
+        ],
+        "summary": "Sync incidents now",
+        "description": "Recorded as a sync run. 409 SYNC_IN_PROGRESS while another incident sync is running.",
+        "operationId": "syncIncidents",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pagerduty/sync-runs": {
+      "get": {
+        "tags": [
+          "PagerDuty sync activity"
+        ],
+        "summary": "List sync runs",
+        "description": "Newest first. Filters combine with AND.",
+        "operationId": "listRuns",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INCIDENTS",
+                "ONCALLS"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "RUNNING",
+                "SUCCEEDED",
+                "FAILED"
+              ]
+            }
+          },
+          {
+            "name": "trigger",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SCHEDULED",
+                "MANUAL"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "default": [
+                "startedAt,DESC"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseSyncRunResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pagerduty/sync-runs/{id}": {
+      "get": {
+        "tags": [
+          "PagerDuty sync activity"
+        ],
+        "operationId": "getRun",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncRunResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pagerduty/sync-status": {
+      "get": {
+        "tags": [
+          "PagerDuty sync activity"
+        ],
+        "summary": "Latest sync of each kind",
+        "description": "Whether one is running, the last run and the last successful one.",
+        "operationId": "status",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncStatusResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pagerduty/sync/oncalls": {
+      "post": {
+        "tags": [
+          "PagerDuty"
+        ],
+        "summary": "Sync on-call shifts now",
+        "description": "Recorded as a sync run. 409 SYNC_IN_PROGRESS while another on-call sync is running.",
+        "operationId": "syncOncalls",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 7,
+              "maximum": 730,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Oncall"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pagerduty/users": {
+      "get": {
+        "tags": [
+          "PagerDuty"
+        ],
+        "operationId": "getUsers",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagerDutyUsersResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pagerduty/webhook-events": {
+      "get": {
+        "tags": [
+          "PagerDuty sync activity"
+        ],
+        "summary": "List received webhooks",
+        "description": "Newest first, without their bodies. Filters combine with AND.",
+        "operationId": "listEvents",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "RECEIVED",
+                "PROCESSED",
+                "IGNORED",
+                "FAILED"
+              ]
+            }
+          },
+          {
+            "name": "eventType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "incident.triggered",
+              "maxLength": 64,
+              "minLength": 0
+            },
+            "example": "incident.triggered"
+          },
+          {
+            "name": "incidentId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 64,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "default": [
+                "receivedAt,DESC"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseWebhookEventResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pagerduty/webhook-events/{id}": {
+      "get": {
+        "tags": [
+          "PagerDuty sync activity"
+        ],
+        "operationId": "getEvent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEventDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pagerduty/webhook-events/{id}/replay": {
+      "post": {
+        "tags": [
+          "PagerDuty sync activity"
+        ],
+        "summary": "Apply a received webhook again",
+        "description": "For a FAILED event, or one stuck in RECEIVED. 409 if it was already applied. Answers with the event's new state, or the error that made it fail again.",
+        "operationId": "replayEvent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEventDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scores/burnout": {
+      "get": {
+        "tags": [
+          "Scores"
+        ],
+        "description": "Admins and managers only. Admins may omit team; managers get their only team, or must name one.",
+        "operationId": "burnout",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 3650,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BurnoutReport"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scores/engineers/{engineerId}": {
+      "get": {
+        "tags": [
+          "Scores"
+        ],
+        "operationId": "engineer",
+        "parameters": [
+          {
+            "name": "engineerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 3650,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineerReport"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scores/fairness": {
+      "get": {
+        "tags": [
+          "Scores"
+        ],
+        "description": "Admins may omit team (all teams); others get their only team, or must name one.",
+        "operationId": "fairness",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 3650,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FairnessReport"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scores/timeofday": {
+      "get": {
+        "tags": [
+          "Scores"
+        ],
+        "description": "Admins may omit team (all teams); others get their only team, or must name one.",
+        "operationId": "timeOfDay",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 3650,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "team",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeOfDayReport"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teams": {
+      "get": {
+        "tags": [
+          "Teams"
+        ],
+        "operationId": "getAll",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Teams"
+        ],
+        "operationId": "create_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teams/{id}": {
+      "get": {
+        "tags": [
+          "Teams"
+        ],
+        "operationId": "getById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Teams"
+        ],
+        "operationId": "update_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Teams"
+        ],
+        "operationId": "delete_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "List users",
+        "description": "Sort by email (default), fullName, role or lastLoginAt.",
+        "operationId": "list",
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ADMIN",
+                "MANAGER",
+                "ENGINEER"
+              ]
+            }
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "default": [
+                "email,ASC"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseUserAccountResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create a user",
+        "description": "Returns a one-time password, shown only here; the user must change it at first sign-in.",
+        "operationId": "create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemporaryPasswordResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAccountResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update a user",
+        "description": "Changing the role or disabling the user ends their sessions.",
+        "operationId": "update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAccountResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}/reset-password": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Reset a user's password",
+        "description": "Returns a new one-time password, ends the user's sessions and lifts any lock.",
+        "operationId": "resetPassword",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemporaryPasswordResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}/teams": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Set the teams a manager can see",
+        "description": "Replaces the list; only for MANAGER logins.",
+        "operationId": "setTeams",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeamAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAccountResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}/unlock": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Lift a lock from failed sign-ins",
+        "operationId": "unlock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAccountResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/webhook/pagerduty": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "handleWebhook",
+        "parameters": [
+          {
+            "name": "X-PagerDuty-Signature",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error (RFC 9457 problem details)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UpdateUserRequest": {
+        "type": "object",
+        "description": "Team access is changed separately (PUT /users/{id}/teams); leaving MANAGER clears it",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "fullName": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "MANAGER",
+              "ENGINEER"
+            ]
+          },
+          "engineerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "exclusiveMinimum": 0
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "enabled",
+          "fullName",
+          "role"
+        ]
+      },
+      "TeamRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "UserAccountResponse": {
+        "type": "object",
+        "description": "A login as admins see it. lockedUntil: set while locked after failed sign-ins",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "MANAGER",
+              "ENGINEER"
+            ]
+          },
+          "engineerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "engineerName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamRef"
+            }
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "mustChangePassword": {
+            "type": "boolean"
+          },
+          "lockedUntil": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastLoginAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "passwordChangedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "email",
+          "enabled",
+          "fullName",
+          "id",
+          "mustChangePassword",
+          "role",
+          "teams"
+        ]
+      },
+      "TeamAccessRequest": {
+        "type": "object",
+        "properties": {
+          "teamIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "teamIds"
+        ]
+      },
+      "TeamRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "TeamResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "timezone"
+        ]
+      },
+      "EngineerRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "team": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pagerDutyUserId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "active": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "email",
+          "name",
+          "team"
+        ]
+      },
+      "EngineerResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "team": {
+            "type": "string"
+          },
+          "pagerDutyUserId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "email",
+          "id",
+          "name",
+          "team"
+        ]
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "description": "ENGINEER needs engineerId (an engineer without a login); only MANAGER takes teamIds",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "fullName": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "MANAGER",
+              "ENGINEER"
+            ]
+          },
+          "engineerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "exclusiveMinimum": 0
+          },
+          "teamIds": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "email",
+          "fullName",
+          "role"
+        ]
+      },
+      "TemporaryPasswordResponse": {
+        "type": "object",
+        "description": "Shown once: give it to the user, who must change it at first sign-in",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserAccountResponse"
+          },
+          "temporaryPassword": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "temporaryPassword",
+          "user"
+        ]
+      },
+      "WebhookEventDetail": {
+        "type": "object",
+        "description": "One received PagerDuty webhook with the body PagerDuty sent",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pagerdutyEventId": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "incidentId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEIVED",
+              "PROCESSED",
+              "IGNORED",
+              "FAILED"
+            ]
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "processedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "eventType",
+          "id",
+          "pagerdutyEventId",
+          "payload",
+          "receivedAt",
+          "status"
+        ]
+      },
+      "SyncResult": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unattributed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "created",
+          "failed",
+          "unattributed",
+          "updated"
+        ]
+      },
+      "Oncall": {
+        "type": "object",
+        "properties": {
+          "shiftsStored": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "shiftsStored",
+          "skipped"
+        ]
+      },
+      "TokenResponse": {
+        "type": "object",
+        "description": "Send accessToken as 'Authorization: Bearer <accessToken>' until expiresAt, then call /api/v1/auth/refresh (the refresh token travels in an httpOnly cookie)",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "tokenType": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          }
+        },
+        "required": [
+          "accessToken",
+          "expiresAt",
+          "tokenType",
+          "user"
+        ]
+      },
+      "UserResponse": {
+        "type": "object",
+        "description": "The signed-in user. teams: the teams they can see (every team for an ADMIN, the managed ones for a MANAGER, their own for an ENGINEER)",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "MANAGER",
+              "ENGINEER"
+            ]
+          },
+          "engineerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamRef"
+            }
+          },
+          "mustChangePassword": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "fullName",
+          "id",
+          "mustChangePassword",
+          "role",
+          "teams"
+        ]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "minLength": 1
+          },
+          "newPassword": {
+            "type": "string",
+            "maxLength": 72,
+            "minLength": 12
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "AlertRequest": {
+        "type": "object",
+        "properties": {
+          "engineerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "severity": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "P1|P2|P3|P4|P5"
+          }
+        },
+        "required": [
+          "engineerId"
+        ]
+      },
+      "AlertResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "engineerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "engineerName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "severity": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "urgency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "triggeredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "acknowledgedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "resolvedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "pagerDutyIncidentId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "incidentNumber": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "serviceName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "assignedEngineerName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "triggeredAt"
+        ]
+      },
+      "PageResponseUserAccountResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserAccountResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page number, from 0",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Requested page size",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 137
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "example": 7
+          }
+        },
+        "required": [
+          "content",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "EngineerTimeOfDay": {
+        "type": "object",
+        "properties": {
+          "engineerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "team": {
+            "type": "string"
+          },
+          "night": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "morning": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "afternoon": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "evening": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "afternoon",
+          "engineerId",
+          "evening",
+          "morning",
+          "name",
+          "night",
+          "team"
+        ]
+      },
+      "TimeOfDayReport": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "engineers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EngineerTimeOfDay"
+            }
+          }
+        },
+        "required": [
+          "engineers",
+          "window"
+        ]
+      },
+      "Window": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "end",
+          "start",
+          "timezone"
+        ]
+      },
+      "EngineerLoad": {
+        "type": "object",
+        "properties": {
+          "engineerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "team": {
+            "type": "string"
+          },
+          "alertCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "escalationsReceived": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "load": {
+            "type": "number",
+            "format": "double"
+          },
+          "sharePct": {
+            "type": "number",
+            "format": "double"
+          },
+          "oncallHours": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "loadPerOncallHour": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          }
+        },
+        "required": [
+          "alertCount",
+          "engineerId",
+          "escalationsReceived",
+          "load",
+          "name",
+          "sharePct",
+          "team"
+        ]
+      },
+      "FairnessReport": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "basis": {
+            "type": "string"
+          },
+          "gini": {
+            "type": "number",
+            "format": "double"
+          },
+          "label": {
+            "type": "string"
+          },
+          "rotationGini": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "confidence": {
+            "type": "string"
+          },
+          "alertCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "engineers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EngineerLoad"
+            }
+          }
+        },
+        "required": [
+          "alertCount",
+          "basis",
+          "confidence",
+          "engineers",
+          "gini",
+          "label",
+          "window"
+        ]
+      },
+      "BurnoutComponents": {
+        "type": "object",
+        "properties": {
+          "exposure": {
+            "type": "number",
+            "format": "double"
+          },
+          "relativeLoad": {
+            "type": "number",
+            "format": "double"
+          },
+          "trend": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "exposure",
+          "relativeLoad",
+          "trend"
+        ]
+      },
+      "BurnoutScore": {
+        "type": "object",
+        "properties": {
+          "engineerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "team": {
+            "type": "string"
+          },
+          "alertCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "escalationsReceived": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "score": {
+            "type": "number",
+            "format": "double"
+          },
+          "risk": {
+            "type": "string"
+          },
+          "nightPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "eveningPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "weekendPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "trendRatio": {
+            "type": "number",
+            "format": "double"
+          },
+          "medianAckMinutes": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "oncallHours": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "components": {
+            "$ref": "#/components/schemas/BurnoutComponents"
+          }
+        },
+        "required": [
+          "alertCount",
+          "components",
+          "engineerId",
+          "escalationsReceived",
+          "eveningPct",
+          "name",
+          "nightPct",
+          "risk",
+          "score",
+          "team",
+          "trendRatio",
+          "weekendPct"
+        ]
+      },
+      "EngineerRef": {
+        "type": "object",
+        "properties": {
+          "engineerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "team": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "engineerId",
+          "name",
+          "team"
+        ]
+      },
+      "EngineerReport": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "engineer": {
+            "$ref": "#/components/schemas/EngineerRef"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "burnout": {
+            "$ref": "#/components/schemas/BurnoutScore"
+          },
+          "teamSharePct": {
+            "type": "number",
+            "format": "double"
+          },
+          "timeOfDay": {
+            "$ref": "#/components/schemas/TimeOfDayCounts"
+          }
+        },
+        "required": [
+          "active",
+          "burnout",
+          "engineer",
+          "teamSharePct",
+          "timeOfDay",
+          "window"
+        ]
+      },
+      "TimeOfDayCounts": {
+        "type": "object",
+        "properties": {
+          "night": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "morning": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "afternoon": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "evening": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "afternoon",
+          "evening",
+          "morning",
+          "night"
+        ]
+      },
+      "BurnoutReport": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "engineers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BurnoutScore"
+            }
+          }
+        },
+        "required": [
+          "engineers",
+          "window"
+        ]
+      },
+      "PageResponseWebhookEventResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebhookEventResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page number, from 0",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Requested page size",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 137
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "example": 7
+          }
+        },
+        "required": [
+          "content",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "WebhookEventResponse": {
+        "type": "object",
+        "description": "One received PagerDuty webhook (without its body; see GET /webhook-events/{id})",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pagerdutyEventId": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "incidentId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEIVED",
+              "PROCESSED",
+              "IGNORED",
+              "FAILED"
+            ]
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "processedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "eventType",
+          "id",
+          "pagerdutyEventId",
+          "receivedAt",
+          "status"
+        ]
+      },
+      "PagerDutyUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "PagerDutyUsersResponse": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PagerDutyUser"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "more": {
+            "type": "boolean"
+          }
+        }
+      },
+      "KindStatus": {
+        "type": "object",
+        "properties": {
+          "running": {
+            "type": "boolean",
+            "description": "Whether a sync of this kind is running now, on any instance"
+          },
+          "lastRun": {
+            "description": "Null before the first sync",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SyncRunResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastSuccess": {
+            "description": "Null before the first successful sync",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SyncRunResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "running"
+        ]
+      },
+      "SyncRunResponse": {
+        "type": "object",
+        "description": "One PagerDuty sync. For ONCALLS, createdCount is the number of shifts stored (new or merged) and updatedCount is null. A SUCCEEDED run may still name an error: incidents that couldn't be stored.",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "INCIDENTS",
+              "ONCALLS"
+            ]
+          },
+          "trigger": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "MANUAL"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Null while RUNNING"
+          },
+          "durationMs": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Null while RUNNING"
+          },
+          "createdCount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "updatedCount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "triggeredBy": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "The admin who started a MANUAL run"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "startedAt",
+          "status",
+          "trigger"
+        ]
+      },
+      "SyncStatusResponse": {
+        "type": "object",
+        "description": "The latest sync of each kind, for a \"last synced 4 minutes ago\" display",
+        "properties": {
+          "scheduled": {
+            "type": "boolean",
+            "description": "Whether this instance runs the scheduled sync"
+          },
+          "intervalSeconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Time between scheduled syncs; null when not scheduled"
+          },
+          "incidents": {
+            "$ref": "#/components/schemas/KindStatus"
+          },
+          "oncalls": {
+            "$ref": "#/components/schemas/KindStatus"
+          }
+        },
+        "required": [
+          "incidents",
+          "oncalls",
+          "scheduled"
+        ]
+      },
+      "PageResponseSyncRunResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncRunResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page number, from 0",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Requested page size",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 137
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "example": 7
+          }
+        },
+        "required": [
+          "content",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "Assignee": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      },
+      "Assignment": {
+        "type": "object",
+        "properties": {
+          "assignee": {
+            "$ref": "#/components/schemas/Assignee"
+          }
+        }
+      },
+      "LastStatusChangeBy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "PagerDutyIncident": {
+        "type": "object",
+        "properties": {
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Assignment"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "urgency": {
+            "type": "string"
+          },
+          "service": {
+            "$ref": "#/components/schemas/ServiceInfo"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "last_status_change_by": {
+            "$ref": "#/components/schemas/LastStatusChangeBy"
+          },
+          "incident_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "resolved_at": {
+            "type": "string"
+          }
+        }
+      },
+      "PagerDutyResponse": {
+        "type": "object",
+        "properties": {
+          "incidents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PagerDutyIncident"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "more": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Priority": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string"
+          }
+        }
+      },
+      "ServiceInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      },
+      "OncallShiftResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "engineerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "engineerName": {
+            "type": "string"
+          },
+          "escalationLevel": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "endsAt",
+          "engineerId",
+          "engineerName",
+          "escalationLevel",
+          "id",
+          "startsAt"
+        ]
+      },
+      "PageResponseOncallShiftResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OncallShiftResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page number, from 0",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Requested page size",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 137
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "example": 7
+          }
+        },
+        "required": [
+          "content",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "PageResponseEngineerResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EngineerResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page number, from 0",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Requested page size",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 137
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "example": 7
+          }
+        },
+        "required": [
+          "content",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "AuditEntryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "userId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "actorEmail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "LOGIN_SUCCEEDED",
+              "LOGIN_FAILED",
+              "ACCOUNT_LOCKED",
+              "LOGOUT",
+              "PASSWORD_CHANGED",
+              "REFRESH_TOKEN_REUSED",
+              "USER_CREATED",
+              "USER_UPDATED",
+              "USER_TEAMS_CHANGED",
+              "USER_PASSWORD_RESET",
+              "USER_UNLOCKED",
+              "USER_DELETED",
+              "SYNC_TRIGGERED",
+              "INCIDENT_RESOLVED",
+              "WEBHOOK_REPLAYED"
+            ]
+          },
+          "entityType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entityId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "details": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {}
+          },
+          "ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "requestId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "action",
+          "id",
+          "occurredAt"
+        ]
+      },
+      "PageResponseAuditEntryResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntryResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page number, from 0",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Requested page size",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 137
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "example": 7
+          }
+        },
+        "required": [
+          "content",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "ScoresStatus": {
+        "type": "object",
+        "description": "available: whether the scorer's figures are included. reason when not: SCORER_UNAVAILABLE, or SEVERAL_TEAMS (pick one team to get scores)",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "available"
+        ]
+      },
+      "Trend": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "granularity": {
+            "type": "string"
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrendPeriod"
+            }
+          },
+          "scores": {
+            "$ref": "#/components/schemas/ScoresStatus"
+          }
+        },
+        "required": [
+          "granularity",
+          "periods",
+          "scores",
+          "window"
+        ]
+      },
+      "TrendPeriod": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "alertCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "gini": {
+            "type": "number",
+            "format": "double"
+          },
+          "label": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "string"
+          },
+          "averageBurnout": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "highRiskCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "alertCount",
+          "confidence",
+          "end",
+          "gini",
+          "highRiskCount",
+          "label",
+          "start"
+        ]
+      },
+      "Kpi": {
+        "type": "object",
+        "description": "A figure for the window and the same-length period before it. changePct is null when there's nothing to compare with",
+        "properties": {
+          "value": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "previous": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "changePct": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "Summary": {
+        "type": "object",
+        "description": "gini, fairnessLabel and highRiskEngineers come from the scorer and are null when scores aren't available (see scores); highRiskEngineers is also null for engineers",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "previousWindow": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "alerts": {
+            "$ref": "#/components/schemas/Kpi"
+          },
+          "mttaMinutes": {
+            "$ref": "#/components/schemas/Kpi"
+          },
+          "mttrMinutes": {
+            "$ref": "#/components/schemas/Kpi"
+          },
+          "afterHoursPct": {
+            "$ref": "#/components/schemas/Kpi"
+          },
+          "escalationRatePct": {
+            "$ref": "#/components/schemas/Kpi"
+          },
+          "gini": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Kpi"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fairnessLabel": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "highRiskEngineers": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Kpi"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scores": {
+            "$ref": "#/components/schemas/ScoresStatus"
+          }
+        },
+        "required": [
+          "afterHoursPct",
+          "alerts",
+          "escalationRatePct",
+          "mttaMinutes",
+          "mttrMinutes",
+          "previousWindow",
+          "scores",
+          "window"
+        ]
+      },
+      "Heatmap": {
+        "type": "object",
+        "description": "All 168 weekday-hour cells, zeros included",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "max": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeatmapCell"
+            }
+          }
+        },
+        "required": [
+          "cells",
+          "max",
+          "window"
+        ]
+      },
+      "HeatmapCell": {
+        "type": "object",
+        "description": "dayOfWeek: 1 = Monday ... 7 = Sunday; hour 0-23. Both in each team's own timezone",
+        "properties": {
+          "dayOfWeek": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hour": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "count",
+          "dayOfWeek",
+          "hour"
+        ]
+      },
+      "SeriesPoint": {
+        "type": "object",
+        "description": "One day, ISO week (from Monday) or month, by its first day",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bySeverity": {
+            "$ref": "#/components/schemas/SeverityCounts"
+          }
+        },
+        "required": [
+          "bySeverity",
+          "start",
+          "total"
+        ]
+      },
+      "ServiceStats": {
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "alertCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mttrMinutes": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "afterHoursPct": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "afterHoursPct",
+          "alertCount",
+          "name"
+        ]
+      },
+      "SeverityCounts": {
+        "type": "object",
+        "properties": {
+          "p1": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "p2": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "p3": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "p4": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "p5": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "other": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "other",
+          "p1",
+          "p2",
+          "p3",
+          "p4",
+          "p5"
+        ]
+      },
+      "Snapshot": {
+        "type": "object",
+        "description": "Everything the analytics page and the reports show, computed once. loadShare and burnout are limited to your own row if you're an engineer",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/Summary"
+          },
+          "alertsOverTime": {
+            "$ref": "#/components/schemas/TimeSeries"
+          },
+          "heatmap": {
+            "$ref": "#/components/schemas/Heatmap"
+          },
+          "topServices": {
+            "$ref": "#/components/schemas/TopServices"
+          },
+          "trend": {
+            "$ref": "#/components/schemas/Trend"
+          },
+          "loadShare": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EngineerLoad"
+            }
+          },
+          "burnout": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BurnoutScore"
+            }
+          }
+        },
+        "required": [
+          "alertsOverTime",
+          "burnout",
+          "heatmap",
+          "loadShare",
+          "summary",
+          "topServices",
+          "trend"
+        ]
+      },
+      "TimeSeries": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "granularity": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeriesPoint"
+            }
+          }
+        },
+        "required": [
+          "granularity",
+          "points",
+          "window"
+        ]
+      },
+      "TopServices": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceStats"
+            }
+          }
+        },
+        "required": [
+          "services",
+          "window"
+        ]
+      },
+      "PageResponseAlertResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlertResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page number, from 0",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Requested page size",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 137
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32",
+            "example": 7
+          }
+        },
+        "required": [
+          "content",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "ApiError": {
+        "type": "object",
+        "description": "Problem details (RFC 9457) returned for every error",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Problem type; always about:blank, see code instead",
+            "example": "about:blank"
+          },
+          "title": {
+            "type": "string",
+            "description": "HTTP reason phrase",
+            "example": "Bad Request"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "example": 400
+          },
+          "detail": {
+            "type": "string",
+            "description": "What went wrong, for people; may change, so don't parse it",
+            "example": "name: must not be blank"
+          },
+          "instance": {
+            "type": "string",
+            "description": "Path of the request that failed",
+            "example": "/api/v1/teams"
+          },
+          "code": {
+            "type": "string",
+            "description": "Stable error category for programs to branch on",
+            "enum": [
+              "VALIDATION_FAILED",
+              "MALFORMED_REQUEST",
+              "BAD_REQUEST",
+              "UNAUTHENTICATED",
+              "INVALID_CREDENTIALS",
+              "FORBIDDEN",
+              "PASSWORD_CHANGE_REQUIRED",
+              "ACCOUNT_DISABLED",
+              "ACCOUNT_LOCKED",
+              "TOO_MANY_REQUESTS",
+              "REFRESH_TOKEN_INVALID",
+              "REFRESH_TOKEN_REUSED",
+              "NOT_FOUND",
+              "METHOD_NOT_ALLOWED",
+              "NOT_ACCEPTABLE",
+              "UNSUPPORTED_MEDIA_TYPE",
+              "CONFLICT",
+              "SYNC_IN_PROGRESS",
+              "UPSTREAM_ERROR",
+              "UPSTREAM_UNAVAILABLE",
+              "UPSTREAM_TIMEOUT",
+              "INTERNAL_ERROR"
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "description": "Problems with individual fields or parameters; empty when none",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          },
+          "requestId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Same value as the X-Request-ID response header; quote it when reporting a problem"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "code",
+          "detail",
+          "errors",
+          "instance",
+          "status",
+          "timestamp",
+          "title",
+          "type"
+        ]
+      },
+      "FieldError": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "name"
+          },
+          "message": {
+            "type": "string",
+            "example": "must not be blank"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "description": "accessToken from /api/v1/auth/login or /api/v1/auth/refresh; valid for 15 minutes",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "refreshCookie": {
+        "type": "apiKey",
+        "description": "httpOnly cookie set by login; the browser sends it by itself",
+        "name": "fairness_refresh",
+        "in": "cookie"
+      }
+    }
+  }
+}
