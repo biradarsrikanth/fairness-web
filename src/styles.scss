@@ -114,3 +114,84 @@ body {
     font-variant-numeric: tabular-nums;
   }
 }
+
+// Page scaffolding shared by the list and detail pages
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// Title on the left, the page's main action on the right
+.page-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+
+  h1 {
+    margin: 0;
+    font: var(--mat-sys-headline-small);
+  }
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.panel {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  background: var(--chart-surface);
+}
+
+.page-problem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+
+  > span {
+    flex: 1;
+  }
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// mat-table inside a panel: scroll sideways on small screens, rows as links
+.table-scroll {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    background: transparent;
+  }
+
+  .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  tr.clickable {
+    cursor: pointer;
+
+    &:hover {
+      background: var(--mat-sys-surface-container);
+    }
+  }
+}
+
+.nowrap {
+  white-space: nowrap;
+}
