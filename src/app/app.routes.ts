@@ -59,7 +59,11 @@ export const routes: Routes = [
         title: 'Alert · Fairness',
         loadComponent: () => import('./features/alerts/alert-page').then((m) => m.AlertPage),
       },
-      upcoming('oncall', 'On-call', 'On-call shifts arrive in Group 10.'),
+      {
+        path: 'oncall',
+        title: 'On-call · Fairness',
+        loadComponent: () => import('./features/oncall/oncall-page').then((m) => m.OncallPage),
+      },
       {
         path: 'engineers',
         title: 'Engineers · Fairness',

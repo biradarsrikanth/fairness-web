@@ -1,0 +1,129 @@
+<div class="page">
+  <div class="page-bar">
+    <h1>On-call</h1>
+  </div>
+
+  <section class="panel now" aria-labelledby="now-heading">
+    <h2 id="now-heading">On call now</h2>
+    @if (now(); as now) {
+      @if (now.length === 0) {
+        <p class="muted">Nobody, according to the shifts synced from PagerDuty.</p>
+      } @else {
+        <ul>
+          @for (shift of now; track shift.id) {
+            <li>
+              <span class="level">{{ levelLabel(shift.escalationLevel) }} </span>
+              <a [routerLink]="['/analytics/engineers', shift.engineerId]">{{
+                shift.engineerName
+              }}</a>
+              <span class="muted"> until {{ when(shift.endsAt) }}</span>
+            </li>
+          }
+        </ul>
+      }
+    } @else {
+      <p class="muted" role="status">Loading…</p>
+    }
+  </section>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <app-date-range-field
+      label="Shifts between"
+      [range]="{ start: range().start, end: range().end }"
+      (rangeChange)="setRange($event)"
+    />
+    @if (engineers.hasValue() && engineers.value()!.content.length > 1) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Engineer</mat-label>
+        <mat-select
+          [value]="engineer() === null ? '' : '' + engineer()"
+          (selectionChange)="setEngineer($event.value)"
+        >
+          <mat-option value="">Everyone</mat-option>
+          @for (option of engineers.value()!.content; track option.id) {
+            <mat-option [value]="'' + option.id">{{ option.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+  </div>
+
+  @if (tooLong()) {
+    <div class="page-problem" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      <span>Pick an end date at most {{ maxDays }} days after the start.</span>
+    </div>
+  } @else if (error()) {
+    <div class="page-problem" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      <span>Couldn't load shifts. {{ error() }}</span>
+      <button matButton type="button" (click)="shifts.reload()">Try again</button>
+    </div>
+  }
+
+  @if (data(); as page) {
+    <section class="panel" [style.opacity]="shifts.isLoading() ? 0.55 : 1">
+      <p class="muted sub">Times in {{ timeZoneName }}</p>
+      @if (page.content.length === 0) {
+        <p class="muted">No shifts in these dates. Shifts come from the PagerDuty sync.</p>
+      } @else {
+        <div class="table-scroll">
+          <table
+            mat-table
+            matSort
+            [dataSource]="page.content"
+            [matSortActive]="matSort().active"
+            [matSortDirection]="matSort().direction"
+            (matSortChange)="sorted($event)"
+            aria-label="On-call shifts"
+          >
+            <ng-container matColumnDef="engineer">
+              <th mat-header-cell *matHeaderCellDef>Engineer</th>
+              <td mat-cell *matCellDef="let shift">
+                <a [routerLink]="['/analytics/engineers', shift.engineerId]">{{
+                  shift.engineerName
+                }}</a>
+                @if (isCurrent(shift)) {
+                  <span class="now-badge">Now</span>
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="level">
+              <th mat-header-cell *matHeaderCellDef>Level</th>
+              <td mat-cell *matCellDef="let shift">{{ levelLabel(shift.escalationLevel) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="startsAt">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Starts</th>
+              <td mat-cell *matCellDef="let shift" class="nowrap">{{ when(shift.startsAt) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="endsAt">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Ends</th>
+              <td mat-cell *matCellDef="let shift" class="nowrap">{{ when(shift.endsAt) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="length">
+              <th mat-header-cell *matHeaderCellDef class="num">Length</th>
+              <td mat-cell *matCellDef="let shift" class="num">{{ shiftLength(shift) }}</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columns"></tr>
+            <tr
+              mat-row
+              *matRowDef="let shift; columns: columns"
+              [class.current]="isCurrent(shift)"
+            ></tr>
+          </table>
+        </div>
+      }
+      <mat-paginator
+        [length]="page.totalElements"
+        [pageIndex]="page.page"
+        [pageSize]="page.size"
+        [pageSizeOptions]="pageSizes"
+        (page)="paged($event)"
+        aria-label="Pages of shifts"
+      />
+    </section>
+  } @else if (shifts.isLoading()) {
+    <p class="muted" role="status">Loading shifts…</p>
+  }
+</div>
