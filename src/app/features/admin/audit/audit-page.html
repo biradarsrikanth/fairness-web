@@ -1,0 +1,114 @@
+<div class="page">
+  <div class="page-bar">
+    <h1>Audit log</h1>
+  </div>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="action">
+      <mat-label>Action</mat-label>
+      <mat-select [value]="actionFilter() ?? ''" (selectionChange)="setAction($event.value)">
+        <mat-option value="">Any action</mat-option>
+        @for (group of groups; track group) {
+          <mat-optgroup [label]="group">
+            @for (action of actionsIn(group); track action.value) {
+              <mat-option [value]="action.value">{{ action.label }}</mat-option>
+            }
+          </mat-optgroup>
+        }
+      </mat-select>
+    </mat-form-field>
+    <app-date-range-field label="When" [range]="dates()" (rangeChange)="setDates($event)" />
+    @if (userFilter() !== null) {
+      <mat-chip-set aria-label="User filter">
+        <mat-chip (removed)="filterUser(null)">
+          {{ userEmail() ?? 'User ' + userFilter() }}
+          <button matChipRemove aria-label="Show everyone's actions">
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip>
+      </mat-chip-set>
+    }
+    @if (filtered()) {
+      <button matButton type="button" (click)="clearFilters()">Clear filters</button>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="page-problem" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      <span>Couldn't load the audit log. {{ error() }}</span>
+      <button matButton type="button" (click)="entries.reload()">Try again</button>
+    </div>
+  }
+
+  @if (data(); as page) {
+    <section class="panel" [style.opacity]="entries.isLoading() ? 0.55 : 1">
+      @if (page.content.length === 0) {
+        <p class="muted">
+          {{ filtered() ? 'Nothing matches these filters.' : 'Nothing recorded yet.' }}
+        </p>
+      } @else {
+        <div class="table-scroll">
+          <table class="data-table" aria-label="Audit log">
+            <thead>
+              <tr>
+                <th scope="col">When</th>
+                <th scope="col">Who</th>
+                <th scope="col">What</th>
+                <th scope="col">Details</th>
+                <th scope="col">From</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of page.content; track entry.id) {
+                <tr>
+                  <td class="nowrap">{{ when(entry.occurredAt) }}</td>
+                  <td>
+                    @if (entry.userId) {
+                      <button type="button" class="link" (click)="filterUser(entry.userId)">
+                        {{ entry.actorEmail ?? 'User ' + entry.userId }}
+                      </button>
+                    } @else {
+                      {{ entry.actorEmail ?? 'Someone signed out' }}
+                    }
+                  </td>
+                  <td [class.warning]="isWarning(entry.action)">
+                    {{ actionLabel(entry.action) }}
+                    @if (entry.entityType) {
+                      <span class="muted"> · {{ entry.entityType }} {{ entry.entityId }}</span>
+                    }
+                  </td>
+                  <td>
+                    @for (pair of detailPairs(entry.details); track pair.key) {
+                      <span class="pair"
+                        ><span class="muted">{{ pair.key }}:</span> {{ pair.value }}</span
+                      >
+                    }
+                  </td>
+                  <td class="small">
+                    {{ entry.ip ?? '–' }}
+                    @if (entry.requestId) {
+                      <div class="muted mono" [title]="'Request ' + entry.requestId">
+                        {{ entry.requestId }}
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <mat-paginator
+        [length]="page.totalElements"
+        [pageIndex]="page.page"
+        [pageSize]="page.size"
+        [pageSizeOptions]="pageSizes"
+        (page)="paged($event)"
+        aria-label="Pages of the audit log"
+      />
+    </section>
+  } @else if (entries.isLoading()) {
+    <p class="muted" role="status">Loading the audit log…</p>
+  }
+</div>

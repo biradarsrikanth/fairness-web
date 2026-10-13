@@ -1,0 +1,23 @@
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+
+  h2 {
+    margin: 0;
+    font: var(--mat-sys-title-medium);
+  }
+}
+
+.failed {
+  color: var(--delta-bad);
+  font-weight: 500;
+}
+
+.error-text {
+  color: var(--delta-bad);
+  font-weight: 400;
+}

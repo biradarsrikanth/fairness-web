@@ -1,0 +1,107 @@
+<div class="page">
+  <div class="page-bar">
+    <h1>PagerDuty sync</h1>
+    @if (status.hasValue() && status.value(); as status) {
+      <span class="muted">
+        {{
+          status.scheduled
+            ? 'Scheduled ' + interval(status.intervalSeconds) + ' on this server'
+            : 'No scheduled sync on this server'
+        }}
+      </span>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="page-problem" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      <span>Couldn't load the sync status. {{ error() }}</span>
+      <button matButton type="button" (click)="status.reload()">Try again</button>
+    </div>
+  }
+
+  <div class="kinds">
+    @for (item of kinds(); track item.key) {
+      <section class="panel kind" [attr.aria-labelledby]="item.key + '-heading'">
+        <div class="kind-head">
+          <h2 [id]="item.key + '-heading'">{{ kindLabels[item.kind] }}</h2>
+          @if (kindStatus(item.key)?.running) {
+            <span class="running" role="status">
+              <mat-spinner diameter="16" aria-hidden="true" />
+              Running
+            </span>
+          }
+        </div>
+
+        @if (status.hasValue()) {
+          @if (run(kindStatus(item.key)); as last) {
+            <dl>
+              <div>
+                <dt>Last run</dt>
+                <dd>
+                  <span [class]="'outcome ' + last.status.toLowerCase()">{{
+                    last.status === 'SUCCEEDED'
+                      ? 'Succeeded'
+                      : last.status === 'FAILED'
+                        ? 'Failed'
+                        : 'Running'
+                  }}</span>
+                  {{ ago(last.startedAt) }}
+                  <span class="muted"
+                    >({{ last.trigger === 'MANUAL' ? 'manual' : 'scheduled' }},
+                    {{ duration(last.durationMs) }})</span
+                  >
+                </dd>
+              </div>
+              <div>
+                <dt>Result</dt>
+                <dd>{{ runOutcome(last) }}</dd>
+              </div>
+              @if (last.error) {
+                <div>
+                  <dt>Error</dt>
+                  <dd class="error-text">{{ last.error }}</dd>
+                </div>
+              }
+              @if (kindStatus(item.key)?.lastSuccess; as success) {
+                @if (success.id !== last.id) {
+                  <div>
+                    <dt>Last success</dt>
+                    <dd>{{ when(success.startedAt) }} ({{ ago(success.startedAt) }})</dd>
+                  </div>
+                }
+              }
+            </dl>
+          } @else {
+            <p class="muted">Never synced yet.</p>
+          }
+        }
+
+        <div class="actions">
+          @if (item.kind === 'ONCALLS') {
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="days">
+              <mat-label>Fetch</mat-label>
+              <mat-select [value]="days()" (selectionChange)="days.set($event.value)">
+                @for (option of backfillDays; track option) {
+                  <mat-option [value]="option">Last {{ option }} days</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+          <button
+            matButton="filled"
+            type="button"
+            [disabled]="starting() !== null || !!kindStatus(item.key)?.running"
+            (click)="sync(item.kind)"
+          >
+            <mat-icon>sync</mat-icon>
+            {{ starting() === item.kind ? 'Syncing…' : 'Sync now' }}
+          </button>
+        </div>
+      </section>
+    }
+  </div>
+
+  <app-sync-runs-table [changes]="changes()" />
+  <app-webhook-events-table />
+</div>

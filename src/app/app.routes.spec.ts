@@ -10,8 +10,10 @@ import { Role } from './core/auth/auth';
 import { authInterceptor } from './core/auth/auth-interceptor';
 import { NAVIGATION } from './core/layout/navigation';
 
-// The real route table: who gets where, and whether the menu offers only what the routes allow
-describe('routes', () => {
+// The real route table: who gets where, and whether the menu offers only what the routes allow.
+// First visits load the lazy pages (ECharts included) while other spec files run alongside, which can take
+// several seconds, hence the longer timeout.
+describe('routes', { timeout: 30_000 }, () => {
   let harness: RouterTestingHarness;
   let router: Router;
 

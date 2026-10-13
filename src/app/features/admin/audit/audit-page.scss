@@ -1,0 +1,37 @@
+.action {
+  width: 280px;
+  max-width: 100%;
+}
+
+.warning {
+  color: var(--delta-bad);
+  font-weight: 500;
+}
+
+.pair {
+  display: inline-block;
+  margin-right: 12px;
+}
+
+.small {
+  font: var(--mat-sys-body-small);
+}
+
+.mono {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mat-sys-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

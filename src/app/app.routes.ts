@@ -1,20 +1,6 @@
-import { Route, Routes } from '@angular/router';
-import { Role } from './core/auth/auth';
+import { Routes } from '@angular/router';
 import { authGuard, guestGuard, roleGuard } from './core/auth/auth-guards';
 import { ADMINS, MANAGERS } from './core/layout/navigation';
-
-const placeholder = () => import('./features/placeholder/placeholder').then((m) => m.Placeholder);
-
-/** A page a later group builds; replace loadComponent when it lands. */
-function upcoming(path: string, heading: string, note: string, roles?: readonly Role[]): Route {
-  return {
-    path,
-    title: `${heading} · Fairness`,
-    loadComponent: placeholder,
-    data: { heading, note },
-    canActivate: roles ? [roleGuard(...roles)] : [],
-  };
-}
 
 export const routes: Routes = [
   {
@@ -83,13 +69,18 @@ export const routes: Routes = [
         canActivate: [roleGuard(...ADMINS)],
         loadComponent: () => import('./features/admin/users/users-page').then((m) => m.UsersPage),
       },
-      upcoming(
-        'admin/sync',
-        'PagerDuty sync',
-        'Sync status and manual syncs arrive in Group 10.',
-        ADMINS,
-      ),
-      upcoming('admin/audit', 'Audit log', 'The audit log arrives in Group 10.', ADMINS),
+      {
+        path: 'admin/sync',
+        title: 'PagerDuty sync · Fairness',
+        canActivate: [roleGuard(...ADMINS)],
+        loadComponent: () => import('./features/admin/sync/sync-page').then((m) => m.SyncPage),
+      },
+      {
+        path: 'admin/audit',
+        title: 'Audit log · Fairness',
+        canActivate: [roleGuard(...ADMINS)],
+        loadComponent: () => import('./features/admin/audit/audit-page').then((m) => m.AuditPage),
+      },
     ],
   },
   { path: '**', redirectTo: '' },
