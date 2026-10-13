@@ -2,7 +2,7 @@ import { HttpContext, HttpContextToken, HttpErrorResponse } from '@angular/commo
 import { DestroyRef, Service, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Api } from '../../api/api';
-import { changePassword, login, logout, refreshSession } from '../../api/functions';
+import { changePassword, getCurrentUser, login, logout, refreshSession } from '../../api/functions';
 import { TokenResponse, UserResponse } from '../../api/models';
 import { BACKGROUND, handlesErrors } from '../http/api-error';
 
@@ -98,6 +98,17 @@ export class AuthService {
   /** On app start: picks up the session of an earlier visit, if its cookie is still valid. */
   async restore(): Promise<void> {
     await this.refresh().catch(() => false);
+  }
+
+  /** Reads the signed-in user again: the teams they see change when teams are added, renamed or removed. */
+  async reloadUser(): Promise<void> {
+    if (!this.signedIn()) return;
+    try {
+      const user = await this.api.invoke(getCurrentUser, {}, handlesErrors().set(BACKGROUND, true));
+      this.currentUser.set(user);
+    } catch {
+      // The user stays as it was; the next sign-in or reload catches up
+    }
   }
 
   async logout(): Promise<void> {

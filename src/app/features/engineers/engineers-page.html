@@ -1,0 +1,138 @@
+<div class="page">
+  <div class="page-bar">
+    <h1>Engineers</h1>
+    <button matButton="filled" type="button" (click)="edit()">
+      <mat-icon>person_add</mat-icon>
+      Add engineer
+    </button>
+  </div>
+
+  <div class="filters" role="group" aria-label="Filters">
+    @if (teams().length > 1) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Team</mat-label>
+        <mat-select
+          [value]="teamFilter() ?? ''"
+          (selectionChange)="setFilter('team', $event.value)"
+        >
+          <mat-option value="">Any team</mat-option>
+          @for (team of teams(); track team.id) {
+            <mat-option [value]="team.name">{{ team.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Show</mat-label>
+      <mat-select
+        [value]="activeFilter() ?? ''"
+        (selectionChange)="setFilter('active', $event.value)"
+      >
+        <mat-option value="">Everyone</mat-option>
+        <mat-option value="true">Active</mat-option>
+        <mat-option value="false">Inactive</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (error()) {
+    <div class="page-problem" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      <span>Couldn't load engineers. {{ error() }}</span>
+      <button matButton type="button" (click)="engineers.reload()">Try again</button>
+    </div>
+  }
+
+  @if (data(); as page) {
+    <section class="panel" [style.opacity]="engineers.isLoading() ? 0.55 : 1">
+      @if (page.content.length === 0) {
+        <p class="muted">No engineers here yet.</p>
+      } @else {
+        <div class="table-scroll">
+          <table
+            mat-table
+            matSort
+            [dataSource]="page.content"
+            [matSortActive]="matSort().active"
+            [matSortDirection]="matSort().direction"
+            (matSortChange)="sorted($event)"
+            aria-label="Engineers"
+          >
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+              <td mat-cell *matCellDef="let engineer">
+                <a [routerLink]="['/analytics/engineers', engineer.id]">{{ engineer.name }}</a>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="email">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+              <td mat-cell *matCellDef="let engineer">{{ engineer.email }}</td>
+            </ng-container>
+            <ng-container matColumnDef="team">
+              <th mat-header-cell *matHeaderCellDef>Team</th>
+              <td mat-cell *matCellDef="let engineer">{{ engineer.team }}</td>
+            </ng-container>
+            <ng-container matColumnDef="pagerDutyUserId">
+              <th mat-header-cell *matHeaderCellDef>PagerDuty</th>
+              <td mat-cell *matCellDef="let engineer">
+                {{ engineer.pagerDutyUserId ?? 'Not linked' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="active">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let engineer">
+                {{ engineer.active ? 'Active' : 'Inactive' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>
+                <span class="visually-hidden">Actions</span>
+              </th>
+              <td mat-cell *matCellDef="let engineer" class="num">
+                <button
+                  matIconButton
+                  type="button"
+                  [matMenuTriggerFor]="menu"
+                  [attr.aria-label]="'Actions for ' + engineer.name"
+                >
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #menu="matMenu" xPosition="before">
+                  <button mat-menu-item type="button" (click)="edit(engineer)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    mat-menu-item
+                    type="button"
+                    (click)="setActive(engineer, !engineer.active)"
+                  >
+                    <mat-icon>{{ engineer.active ? 'person_off' : 'person' }}</mat-icon>
+                    <span>{{ engineer.active ? 'Mark inactive' : 'Mark active' }}</span>
+                  </button>
+                  <button mat-menu-item type="button" (click)="remove(engineer)">
+                    <mat-icon>delete</mat-icon>
+                    <span>Remove</span>
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columns()"></tr>
+            <tr mat-row *matRowDef="let engineer; columns: columns()"></tr>
+          </table>
+        </div>
+      }
+      <mat-paginator
+        [length]="page.totalElements"
+        [pageIndex]="page.page"
+        [pageSize]="page.size"
+        [pageSizeOptions]="pageSizes"
+        (page)="paged($event)"
+        aria-label="Pages of engineers"
+      />
+    </section>
+  } @else if (engineers.isLoading()) {
+    <p class="muted" role="status">Loading engineers…</p>
+  }
+</div>

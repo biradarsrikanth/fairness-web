@@ -1,0 +1,61 @@
+<h2 mat-dialog-title>{{ editing ? 'Edit ' + editing.name : 'Add an engineer' }}</h2>
+<form novalidate (submit)="save($event)">
+  <mat-dialog-content>
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+      <input matInput autocomplete="off" [formField]="engineerForm.name" />
+      @if (firstError(engineerForm.name); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" autocomplete="off" [formField]="engineerForm.email" />
+      @if (firstError(engineerForm.email); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Team</mat-label>
+      <mat-select [formField]="engineerForm.team">
+        @if (teams.hasValue()) {
+          @for (team of teams.value(); track team.id) {
+            <mat-option [value]="team.name">{{ team.name }}</mat-option>
+          }
+        }
+      </mat-select>
+      @if (teams.error()) {
+        <mat-hint>Couldn't load the teams</mat-hint>
+      }
+      @if (firstError(engineerForm.team); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>PagerDuty user ID</mat-label>
+      <input matInput autocomplete="off" [formField]="engineerForm.pagerDutyUserId" />
+      <mat-hint>Links their PagerDuty incidents and shifts, e.g. PABC123</mat-hint>
+      @if (firstError(engineerForm.pagerDutyUserId); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    @if (editing) {
+      <mat-checkbox [formField]="engineerForm.active">On the rotation (active)</mat-checkbox>
+      <p class="hint">Inactive engineers keep their history but aren't compared for fairness.</p>
+    }
+
+    @if (formError(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close>Cancel</button>
+    <button matButton="filled" type="submit" [disabled]="engineerForm().submitting()">
+      {{ engineerForm().submitting() ? 'Saving…' : editing ? 'Save' : 'Add engineer' }}
+    </button>
+  </mat-dialog-actions>
+</form>

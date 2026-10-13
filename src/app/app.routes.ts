@@ -60,8 +60,19 @@ export const routes: Routes = [
         loadComponent: () => import('./features/alerts/alert-page').then((m) => m.AlertPage),
       },
       upcoming('oncall', 'On-call', 'On-call shifts arrive in Group 10.'),
-      upcoming('engineers', 'Engineers', 'Engineer management arrives in Group 10.', MANAGERS),
-      upcoming('teams', 'Teams', 'Team management arrives in Group 10.', MANAGERS),
+      {
+        path: 'engineers',
+        title: 'Engineers · Fairness',
+        canActivate: [roleGuard(...MANAGERS)],
+        loadComponent: () =>
+          import('./features/engineers/engineers-page').then((m) => m.EngineersPage),
+      },
+      {
+        path: 'teams',
+        title: 'Teams · Fairness',
+        canActivate: [roleGuard(...MANAGERS)],
+        loadComponent: () => import('./features/teams/teams-page').then((m) => m.TeamsPage),
+      },
       upcoming('admin/users', 'Users', 'User management arrives in Group 10.', ADMINS),
       upcoming(
         'admin/sync',

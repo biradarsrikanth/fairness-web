@@ -140,4 +140,21 @@ describe('AuthService', () => {
     expect(auth.mustChangePassword()).toBe(false);
     expect(auth.accessToken()).toBe('access-2');
   });
+
+  it('reads the user again, e.g. after their teams changed', async () => {
+    await signIn('MANAGER');
+    const reloading = auth.reloadUser();
+    await settle();
+    const request = http.expectOne('/api/v1/auth/me');
+    expect(request.request.headers.get('Authorization')).toBe('Bearer access-1');
+    request.flush({
+      ...auth.user()!,
+      teams: [
+        { id: 1, name: 'SRE' },
+        { id: 2, name: 'Data' },
+      ],
+    });
+    await reloading;
+    expect(auth.user()?.teams.map((t) => t.name)).toEqual(['SRE', 'Data']);
+  });
 });
