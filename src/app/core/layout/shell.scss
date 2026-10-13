@@ -1,0 +1,86 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.toolbar {
+  gap: 8px;
+  background: var(--mat-sys-surface-container);
+}
+
+.brand {
+  color: inherit;
+  text-decoration: none;
+  font: var(--mat-sys-title-large);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.user-name {
+  max-width: 24ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 599.98px) {
+  .user-name {
+    display: none;
+  }
+}
+
+// Reserves the bar's height so the page doesn't jump while it comes and goes
+.progress {
+  height: 4px;
+}
+
+.user-summary {
+  padding: 8px 16px 12px;
+}
+
+.user-email {
+  font: var(--mat-sys-body-medium);
+}
+
+.user-role {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.container {
+  flex: 1;
+}
+
+.sidenav {
+  width: 240px;
+}
+
+.content {
+  display: block;
+  padding: 24px;
+  outline: none;
+}
+
+@media (max-width: 599.98px) {
+  .content {
+    padding: 16px;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 10;
+  padding: 8px 12px;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  border-radius: 8px;
+
+  &:focus {
+    top: 8px;
+  }
+}

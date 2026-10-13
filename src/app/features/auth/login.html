@@ -1,0 +1,45 @@
+<main class="auth-page">
+  <mat-card appearance="outlined" class="auth-card">
+    <mat-card-header>
+      <mat-card-title><h1>Sign in</h1></mat-card-title>
+      <mat-card-subtitle>On-call fairness tracker</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (notice(); as notice) {
+        <p class="notice" role="status">{{ notice }}</p>
+      }
+
+      <form novalidate (submit)="signIn($event)">
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" autocomplete="username" [formField]="loginForm.email" />
+          @if (firstError(loginForm.email); as message) {
+            <mat-error>{{ message }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            type="password"
+            autocomplete="current-password"
+            [formField]="loginForm.password"
+          />
+          @if (firstError(loginForm.password); as message) {
+            <mat-error>{{ message }}</mat-error>
+          }
+        </mat-form-field>
+
+        @if (formError(); as message) {
+          <p class="form-error" role="alert">{{ message }}</p>
+        }
+
+        <button matButton="filled" type="submit" [disabled]="loginForm().submitting()">
+          {{ loginForm().submitting() ? 'Signing in…' : 'Sign in' }}
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</main>

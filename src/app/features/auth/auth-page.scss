@@ -1,0 +1,54 @@
+// Sign-in and change-password: one card, centred, outside the app shell
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.auth-page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.auth-card {
+  width: min(400px, 100%);
+}
+
+h1 {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+}
+
+.notice,
+.form-error {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font: var(--mat-sys-body-medium);
+}
+
+.notice {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.form-error {
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
