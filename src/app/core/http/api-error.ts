@@ -19,7 +19,15 @@ export function handlesErrors(context = new HttpContext()): HttpContext {
 /** The gateway's problem details, if the error is one; network failures and foreign errors are not. */
 export function apiError(error: unknown): ApiError | null {
   if (!(error instanceof HttpErrorResponse)) return null;
-  const body: unknown = error.error;
+  let body: unknown = error.error;
+  // Operations without a response body (deletes) ask for text, so their errors arrive as JSON strings
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      return null;
+    }
+  }
   return typeof body === 'object' && body !== null && 'code' in body ? (body as ApiError) : null;
 }
 
