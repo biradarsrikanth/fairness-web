@@ -1,0 +1,72 @@
+<div class="scroll">
+  <table
+    mat-table
+    matSort
+    [dataSource]="sorted()"
+    [matSortActive]="sort().active"
+    [matSortDirection]="sort().direction"
+    (matSortChange)="sort.set($event)"
+    aria-label="Burnout per engineer"
+  >
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Engineer</th>
+      <td mat-cell *matCellDef="let row">
+        <a [routerLink]="['/analytics/engineers', row.engineerId]" [queryParams]="queryParams()">{{
+          row.name
+        }}</a>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="team">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Team</th>
+      <td mat-cell *matCellDef="let row">{{ row.team }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="score">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc" class="num">Score</th>
+      <td mat-cell *matCellDef="let row" class="num">{{ row.score.toFixed(0) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="risk">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc">Risk</th>
+      <td mat-cell *matCellDef="let row"><app-risk-badge [risk]="row.risk" /></td>
+    </ng-container>
+
+    <ng-container matColumnDef="alertCount">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc" class="num">Alerts</th>
+      <td mat-cell *matCellDef="let row" class="num">{{ row.alertCount }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="nightPct">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc" class="num">Night</th>
+      <td mat-cell *matCellDef="let row" class="num">{{ formatPct(row.nightPct) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="weekendPct">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc" class="num">Weekend</th>
+      <td mat-cell *matCellDef="let row" class="num">{{ formatPct(row.weekendPct) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="trendRatio">
+      <th
+        mat-header-cell
+        *matHeaderCellDef
+        mat-sort-header
+        start="desc"
+        class="num"
+        title="Alerts in the last 30 days compared with the 30 before"
+      >
+        Trend
+      </th>
+      <td mat-cell *matCellDef="let row" class="num">{{ trend(row.trendRatio) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="medianAckMinutes">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header class="num">Median ack</th>
+      <td mat-cell *matCellDef="let row" class="num">{{ formatMinutes(row.medianAckMinutes) }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns(); sticky: true"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns()"></tr>
+  </table>
+</div>

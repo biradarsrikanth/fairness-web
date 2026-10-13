@@ -1,0 +1,24 @@
+.scroll {
+  max-height: 420px;
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  background: transparent;
+}
+
+th.num,
+td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+th.num ::ng-deep .mat-sort-header-container {
+  justify-content: flex-end;
+}
+
+a {
+  color: var(--mat-sys-primary);
+  font-weight: 500;
+}

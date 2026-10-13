@@ -1,0 +1,223 @@
+<header class="page-header">
+  <h1>Analytics</h1>
+  @if (windowText()) {
+    <p class="window">{{ windowText() }}</p>
+  }
+</header>
+
+<app-filter-bar
+  [filter]="filter()"
+  [window]="data()?.summary?.window ?? null"
+  [teams]="teams()"
+  (changed)="apply($event)"
+/>
+
+@if (error()) {
+  <div class="problem" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    <span>Couldn't load analytics. {{ error() }}</span>
+    <button matButton type="button" (click)="snapshot.reload()">Try again</button>
+  </div>
+}
+
+@if (data(); as data) {
+  <div class="content" [class.stale]="snapshot.isLoading()" [attr.aria-busy]="snapshot.isLoading()">
+    @if (scoresNotice()) {
+      <div class="notice" role="status">
+        <mat-icon aria-hidden="true">info</mat-icon>
+        <span>{{ scoresNotice() }}</span>
+      </div>
+    }
+
+    <app-kpi-tiles [summary]="data.summary" />
+
+    <div class="grid">
+      <app-chart-card
+        heading="Alerts over time"
+        [subheading]="'By severity, ' + granularityText(data.alertsOverTime.granularity)"
+        [empty]="data.summary.alerts.value === 0"
+        emptyText="No alerts in this period."
+      >
+        <app-chart
+          chart
+          label="Stacked bar chart of alerts by severity"
+          [options]="alertsChart()!"
+        />
+        <table table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Period</th>
+              @for (severity of severities(); track severity.key) {
+                <th scope="col" class="num">{{ severity.label }}</th>
+              }
+              <th scope="col" class="num">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (point of data.alertsOverTime.points; track point.start) {
+              <tr>
+                <th scope="row">{{ periodLabel(point.start, data.alertsOverTime.granularity) }}</th>
+                @for (severity of severities(); track severity.key) {
+                  <td class="num">{{ point.bySeverity[severity.key] }}</td>
+                }
+                <td class="num">{{ point.total }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </app-chart-card>
+
+      <app-chart-card
+        heading="Fairness over time"
+        [subheading]="
+          'Gini of load ' + granularityText(data.trend.granularity) + '; 0 is perfectly even'
+        "
+        [empty]="!data.trend.scores.available || data.trend.periods.length === 0"
+        [emptyText]="
+          data.trend.scores.available ? 'Nothing to show for this period.' : scoresReason() + '.'
+        "
+      >
+        <app-chart
+          chart
+          label="Line chart of the Gini coefficient per period"
+          [options]="giniChart()!"
+        />
+        <table table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Period</th>
+              <th scope="col" class="num">Gini</th>
+              <th scope="col" class="num">Alerts</th>
+              <th scope="col" class="num">Average burnout</th>
+              <th scope="col" class="num">High risk</th>
+              <th scope="col">Confidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (period of data.trend.periods; track period.start) {
+              <tr>
+                <th scope="row">{{ periodLabel(period.start, data.trend.granularity) }}</th>
+                <td class="num">{{ period.gini.toFixed(2) }}</td>
+                <td class="num">{{ period.alertCount }}</td>
+                <td class="num">{{ period.averageBurnout?.toFixed(0) ?? '–' }}</td>
+                <td class="num">{{ period.highRiskCount }}</td>
+                <td>{{ humanize(period.confidence) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </app-chart-card>
+
+      @if (isEngineer()) {
+        <app-chart-card
+          heading="Your share of the load"
+          subheading="Of your team's on-call load"
+          [empty]="data.loadShare.length === 0"
+          [emptyText]="scoresReason() + '.'"
+        >
+          <p chart class="share">{{ formatPct(data.loadShare[0]?.sharePct) }}</p>
+          <p table class="share">{{ formatPct(data.loadShare[0]?.sharePct) }}</p>
+        </app-chart-card>
+      } @else {
+        <app-chart-card
+          heading="Load share"
+          subheading="Each engineer's share of the weighted load; select a bar for details"
+          [empty]="data.loadShare.length === 0"
+          [emptyText]="
+            data.summary.scores.available ? 'No engineers in this period.' : scoresReason() + '.'
+          "
+        >
+          <app-chart
+            chart
+            label="Bar chart of each engineer's share of the load"
+            [options]="loadChart()!"
+            [height]="loadHeight()"
+            (itemClick)="openEngineer($event)"
+          />
+          <table table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Engineer</th>
+                <th scope="col" class="num">Share</th>
+                <th scope="col" class="num">Alerts</th>
+                <th scope="col" class="num">On-call hours</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (engineer of data.loadShare; track engineer.engineerId) {
+                <tr>
+                  <th scope="row">{{ engineer.name }}</th>
+                  <td class="num">{{ formatPct(engineer.sharePct) }}</td>
+                  <td class="num">{{ engineer.alertCount }}</td>
+                  <td class="num">{{ engineer.oncallHours?.toFixed(0) ?? '–' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </app-chart-card>
+      }
+
+      <app-chart-card
+        heading="When alerts fire"
+        subheading="By weekday and hour, in each team's local time"
+        [empty]="data.heatmap.max === 0"
+        emptyText="No alerts in this period."
+      >
+        <app-chart
+          chart
+          label="Heatmap of alerts by weekday and hour"
+          [options]="heatmapChart()!"
+          [height]="300"
+        />
+        <table table class="data-table heatmap-table">
+          <thead>
+            <tr>
+              <th scope="col">Day</th>
+              @for (hour of hours; track hour) {
+                <th scope="col" class="num">{{ hour }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of heatmapRows(); track row.day) {
+              <tr>
+                <th scope="row">{{ row.day }}</th>
+                @for (count of row.counts; track $index) {
+                  <td class="num">{{ count }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </app-chart-card>
+    </div>
+
+    <div class="grid">
+      <section class="panel" aria-labelledby="burnout-heading">
+        <h2 id="burnout-heading">{{ isEngineer() ? 'Your burnout' : 'Burnout' }}</h2>
+        <p class="sub">Score 0–100 from night and weekend pages, relative load and trend</p>
+        @if (data.burnout.length > 0) {
+          <app-burnout-table [rows]="data.burnout" [queryParams]="queryParams()" />
+        } @else {
+          <p class="empty">
+            {{
+              data.summary.scores.available ? 'No engineers in this period.' : scoresReason() + '.'
+            }}
+          </p>
+        }
+      </section>
+
+      <section class="panel" aria-labelledby="services-heading">
+        <h2 id="services-heading">Noisiest services</h2>
+        <p class="sub">The services with the most alerts</p>
+        @if (data.topServices.services.length > 0) {
+          <app-top-services [services]="data.topServices.services" />
+        } @else {
+          <p class="empty">No alerts in this period.</p>
+        }
+      </section>
+    </div>
+  </div>
+} @else if (snapshot.isLoading()) {
+  <p class="loading" role="status">Loading analytics…</p>
+}

@@ -28,7 +28,12 @@ describe('routes', () => {
     router = TestBed.inject(Router);
   });
 
-  afterEach(() => TestBed.inject(HttpTestingController).verify());
+  afterEach(() => {
+    const http = TestBed.inject(HttpTestingController);
+    // The analytics page loads its data on arrival; that's its own spec's business
+    http.match((request) => request.url.startsWith('/api/v1/analytics/'));
+    http.verify();
+  });
 
   it('sends a signed-out user to sign in, remembering where they were going', async () => {
     await harness.navigateByUrl('/alerts?page=2');
