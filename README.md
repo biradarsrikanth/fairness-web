@@ -65,11 +65,27 @@ commit `openapi/gateway.json` with the regenerated client.
 src/app/
   api/        generated client (npm run api)
   core/       auth (service, interceptor, guards), http (errors, loading), layout (shell, navigation)
-  features/   pages, one folder each (auth: sign-in, change password; analytics: the analytics and engineer pages)
-  shared/     reusable pieces (formatting, form helpers, the risk badge)
+  features/   pages, one folder each (auth, analytics, alerts, engineers, teams, oncall, admin/{users,sync,audit})
+  shared/     reusable pieces (formatting, form helpers, list state, dialogs, the risk badge, date range field)
 ```
 
-Pages not built yet show a placeholder; Group 10 replaces them.
+## Pages
+
+| Path                                     | Who              | What                                                                                 |
+| ---------------------------------------- | ---------------- | ------------------------------------------------------------------------------------ |
+| `/analytics`, `/analytics/engineers/:id` | everyone         | KPIs, charts, burnout; one engineer's breakdown                                      |
+| `/alerts`, `/alerts/:id`                 | everyone         | Alerts by team, severity, status and date; an alert's paging history (admins delete) |
+| `/oncall`                                | everyone         | Who is on call now; shifts in a date range                                           |
+| `/engineers`                             | managers, admins | Add, edit, mark inactive, remove                                                     |
+| `/teams`                                 | managers, admins | Managers edit their teams; admins add and delete                                     |
+| `/admin/users`                           | admins           | Logins, roles, manager teams, one-time passwords, unlock                             |
+| `/admin/sync`                            | admins           | Sync status, sync now, sync runs, webhooks (replay failed ones)                      |
+| `/admin/audit`                           | admins           | Who did what                                                                         |
+
+List pages keep their filters, page and sort in the URL (`shared/list/list-state.ts`), so the back button
+and shared links show the same list. Forms open in dialogs and put the gateway's field errors under the
+fields; deletes ask first and show the gateway's reason when it refuses one. What a role sees only shapes the
+pages: the gateway checks every request.
 
 ## Analytics
 
