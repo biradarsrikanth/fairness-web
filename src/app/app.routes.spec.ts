@@ -30,8 +30,8 @@ describe('routes', () => {
 
   afterEach(() => {
     const http = TestBed.inject(HttpTestingController);
-    // The analytics page loads its data on arrival; that's its own spec's business
-    http.match((request) => request.url.startsWith('/api/v1/analytics/'));
+    // Pages load their data on arrival; that's their own specs' business
+    http.match((request) => request.method === 'GET' && request.url.startsWith('/api/v1/'));
     http.verify();
   });
 

@@ -1,0 +1,137 @@
+<div class="page">
+  <button matButton type="button" class="back" (click)="back()">
+    <mat-icon>arrow_back</mat-icon>
+    Alerts
+  </button>
+
+  @if (error()) {
+    <div class="page-problem" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      <span>{{ error() }}</span>
+    </div>
+  } @else if (alert.hasValue() && alert.value(); as alert) {
+    <div class="page-bar">
+      <div>
+        <h1>{{ alert.title ?? 'Untitled alert' }}</h1>
+        <p class="muted subtitle">
+          {{ alert.serviceName ?? 'No service' }}
+          @if (alert.incidentNumber) {
+            · PagerDuty #{{ alert.incidentNumber }}
+          }
+        </p>
+      </div>
+      @if (canDelete()) {
+        <button matButton="outlined" type="button" [disabled]="deleting()" (click)="remove()">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      }
+    </div>
+
+    <section class="panel">
+      <dl class="facts">
+        <div>
+          <dt>Status</dt>
+          <dd>{{ alert.status ? humanize(alert.status) : '–' }}</dd>
+        </div>
+        <div>
+          <dt>Severity</dt>
+          <dd>
+            {{ alert.severity ?? '–'
+            }}{{ alert.urgency ? ' · ' + humanize(alert.urgency) + ' urgency' : '' }}
+          </dd>
+        </div>
+        <div>
+          <dt>Paged</dt>
+          <dd>
+            @if (alert.engineerId) {
+              <a [routerLink]="['/analytics/engineers', alert.engineerId]">{{
+                alert.engineerName
+              }}</a>
+            } @else {
+              {{ alert.assignedEngineerName ?? 'Unattributed' }}
+            }
+            @if (alert.team) {
+              <span class="muted"> · {{ alert.team }}</span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Triggered</dt>
+          <dd>{{ when(alert.triggeredAt) }}</dd>
+        </div>
+        <div>
+          <dt>Acknowledged</dt>
+          <dd>
+            {{ when(alert.acknowledgedAt) }}
+            @if (alert.acknowledgedAt) {
+              <span class="muted"
+                >({{ elapsed(alert.triggeredAt, alert.acknowledgedAt) }} later)</span
+              >
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Resolved</dt>
+          <dd>
+            {{ when(alert.resolvedAt) }}
+            @if (alert.resolvedAt) {
+              <span class="muted">({{ elapsed(alert.triggeredAt, alert.resolvedAt) }} later)</span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Recorded from</dt>
+          <dd>{{ alert.source ? humanize(alert.source) : '–' }}</dd>
+        </div>
+        @if (alert.pagerDutyIncidentId) {
+          <div>
+            <dt>PagerDuty incident</dt>
+            <dd class="mono">{{ alert.pagerDutyIncidentId }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+
+    <section class="panel" aria-labelledby="history-heading">
+      <h2 id="history-heading">Paging history</h2>
+      <p class="muted sub">Who was paged, escalated to or reassigned, oldest first</p>
+      @if (history.error()) {
+        <p class="muted">Couldn't load the paging history.</p>
+      } @else if (history.hasValue() && history.value(); as steps) {
+        @if (steps.length === 0) {
+          <p class="muted">No paging history recorded for this alert.</p>
+        } @else {
+          <ol class="timeline">
+            @for (step of steps; track $index) {
+              <li>
+                <span class="dot" aria-hidden="true"></span>
+                <div>
+                  <div>
+                    <strong>{{ kind(step) }} </strong>
+                    @if (step.engineerId) {
+                      <a [routerLink]="['/analytics/engineers', step.engineerId]">{{
+                        step.engineerName
+                      }}</a>
+                    } @else {
+                      <span>PagerDuty user {{ step.pagerDutyUserId ?? 'unknown' }}</span>
+                    }
+                  </div>
+                  <div class="muted small">
+                    {{ when(step.assignedAt) }} ·
+                    {{ elapsed(alert.triggeredAt, step.assignedAt) }} after it fired ·
+                    {{ source(step) }}
+                  </div>
+                </div>
+              </li>
+            }
+          </ol>
+        }
+      } @else {
+        <p class="muted" role="status">Loading…</p>
+      }
+    </section>
+  } @else {
+    <p class="muted" role="status">Loading alert…</p>
+  }
+</div>

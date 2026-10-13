@@ -49,7 +49,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/analytics/engineer-page').then((m) => m.EngineerPage),
       },
-      upcoming('alerts', 'Alerts', 'The alert list and paging history arrive in Group 10.'),
+      {
+        path: 'alerts',
+        title: 'Alerts · Fairness',
+        loadComponent: () => import('./features/alerts/alerts-page').then((m) => m.AlertsPage),
+      },
+      {
+        path: 'alerts/:id',
+        title: 'Alert · Fairness',
+        loadComponent: () => import('./features/alerts/alert-page').then((m) => m.AlertPage),
+      },
       upcoming('oncall', 'On-call', 'On-call shifts arrive in Group 10.'),
       upcoming('engineers', 'Engineers', 'Engineer management arrives in Group 10.', MANAGERS),
       upcoming('teams', 'Teams', 'Team management arrives in Group 10.', MANAGERS),
