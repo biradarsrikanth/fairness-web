@@ -1,0 +1,6 @@
+dist
+node_modules
+.angular
+.claude
+package-lock.json
+openapi/*.json
