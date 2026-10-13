@@ -1,0 +1,193 @@
+<a matButton class="back" routerLink="/analytics" [queryParams]="backParams()">
+  <mat-icon>arrow_back</mat-icon>
+  Analytics
+</a>
+
+<header class="page-header">
+  <h1>{{ data()?.engineer?.name ?? 'Engineer' }}</h1>
+  @if (data(); as data) {
+    <p class="meta">
+      {{ data.engineer.team }}
+      @if (!data.active) {
+        · <span class="inactive">Inactive</span>
+      }
+      · {{ windowText() }}
+    </p>
+  }
+</header>
+
+<app-filter-bar
+  [filter]="filter()"
+  [window]="data()?.window ?? null"
+  [showGranularity]="false"
+  (changed)="applyDates($event)"
+/>
+
+@if (error()) {
+  <div class="problem" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    <span>{{ error() }}</span>
+    <button matButton type="button" (click)="report.reload()">Try again</button>
+  </div>
+}
+
+@if (data(); as data) {
+  <div class="content" [class.stale]="report.isLoading()" [attr.aria-busy]="report.isLoading()">
+    <ul class="stats" aria-label="Key figures">
+      <li>
+        <span class="label">Burnout score</span>
+        <span class="value">{{ data.burnout.score.toFixed(0) }}</span>
+        <app-risk-badge [risk]="data.burnout.risk" />
+      </li>
+      <li>
+        <span class="label">Alerts</span>
+        <span class="value">{{ data.burnout.alertCount }}</span>
+        <span class="note">{{ data.burnout.escalationsReceived }} escalated to them</span>
+      </li>
+      <li>
+        <span class="label">Share of team load</span>
+        <span class="value">{{ formatPct(data.teamSharePct) }}</span>
+      </li>
+      <li>
+        <span class="label">Median time to acknowledge</span>
+        <span class="value">{{ formatMinutes(data.burnout.medianAckMinutes) }}</span>
+      </li>
+      <li>
+        <span class="label">On-call</span>
+        <span class="value">{{
+          data.burnout.oncallHours === null || data.burnout.oncallHours === undefined
+            ? '–'
+            : data.burnout.oncallHours.toFixed(0) + ' h'
+        }}</span>
+        <span class="note">Primary, from shifts</span>
+      </li>
+    </ul>
+
+    <div class="grid">
+      <section class="panel" aria-labelledby="breakdown-heading">
+        <h2 id="breakdown-heading">What makes up the score</h2>
+        <p class="sub">
+          {{ data.burnout.score.toFixed(0) }} of 100 points
+          @if (confidence() < 1) {
+            · scaled by {{ data.burnout.alertCount }}/5 for having fewer than 5 alerts
+          }
+        </p>
+        <ul class="parts">
+          @for (part of breakdown(); track part.key) {
+            <li>
+              <div class="part-head">
+                <span>{{ part.label }}</span>
+                <span class="points">{{ part.points }} / {{ part.weight }}</span>
+              </div>
+              <div
+                class="meter"
+                role="meter"
+                [attr.aria-label]="part.label"
+                aria-valuemin="0"
+                [attr.aria-valuemax]="part.weight"
+                [attr.aria-valuenow]="part.points"
+              >
+                <span [style.width.%]="(part.points / part.weight) * 100"></span>
+              </div>
+              <span class="note">{{ part.description }}</span>
+            </li>
+          }
+        </ul>
+        <dl class="exposure">
+          <div>
+            <dt>Night</dt>
+            <dd>{{ formatPct(data.burnout.nightPct) }}</dd>
+          </div>
+          <div>
+            <dt>Evening</dt>
+            <dd>{{ formatPct(data.burnout.eveningPct) }}</dd>
+          </div>
+          <div>
+            <dt>Weekend</dt>
+            <dd>{{ formatPct(data.burnout.weekendPct) }}</dd>
+          </div>
+          <div>
+            <dt>Trend</dt>
+            <dd>×{{ data.burnout.trendRatio.toFixed(1) }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <app-chart-card
+        heading="Time of day"
+        subheading="Alerts by part of the day, in the team's local time"
+        [empty]="totalAlerts() === 0"
+        emptyText="No alerts in this period."
+      >
+        <app-chart
+          chart
+          label="Bar chart of alerts by part of the day"
+          [options]="timeOfDayChart()!"
+          [height]="240"
+        />
+        <table table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Part of day</th>
+              <th scope="col">Hours</th>
+              <th scope="col" class="num">Alerts</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (part of dayParts; track part.key) {
+              <tr>
+                <th scope="row">{{ part.label }}</th>
+                <td>{{ part.hours }}</td>
+                <td class="num">{{ data.timeOfDay[part.key] }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </app-chart-card>
+    </div>
+
+    <section class="panel" aria-labelledby="alerts-heading">
+      <h2 id="alerts-heading">Recent alerts</h2>
+      <p class="sub">The latest in this period; times in {{ data.window.timezone }}</p>
+      @if (alertsError()) {
+        <p class="empty">Couldn't load alerts. {{ alertsError() }}</p>
+      } @else if (alerts.hasValue() && alerts.value(); as page) {
+        @if (page.content.length > 0) {
+          <div class="scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Triggered</th>
+                  <th scope="col">Alert</th>
+                  <th scope="col">Service</th>
+                  <th scope="col">Severity</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (alert of page.content; track alert.id) {
+                  <tr>
+                    <td class="nowrap">{{ when(alert.triggeredAt) }}</td>
+                    <td>{{ alert.title ?? 'Untitled' }}</td>
+                    <td>{{ alert.serviceName ?? '–' }}</td>
+                    <td>{{ alert.severity ?? '–' }}</td>
+                    <td>{{ alert.status ? humanize(alert.status) : '–' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (page.totalElements > page.content.length) {
+            <p class="note">{{ page.content.length }} of {{ page.totalElements }} alerts</p>
+          }
+        } @else {
+          <p class="empty">No alerts in this period.</p>
+        }
+      } @else {
+        <p class="empty" role="status">Loading alerts…</p>
+      }
+    </section>
+  </div>
+} @else if (report.isLoading()) {
+  <p class="loading" role="status">Loading…</p>
+}

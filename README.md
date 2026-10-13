@@ -65,8 +65,25 @@ commit `openapi/gateway.json` with the regenerated client.
 src/app/
   api/        generated client (npm run api)
   core/       auth (service, interceptor, guards), http (errors, loading), layout (shell, navigation)
-  features/   pages, one folder each (auth: sign-in, change password)
-  shared/     reusable pieces (form error helpers)
+  features/   pages, one folder each (auth: sign-in, change password; analytics: the analytics and engineer pages)
+  shared/     reusable pieces (formatting, form helpers, the risk badge)
 ```
 
-Pages not built yet show a placeholder; Groups 9 and 10 replace them.
+Pages not built yet show a placeholder; Group 10 replaces them.
+
+## Analytics
+
+- `/analytics` loads one `GET /api/v1/analytics/snapshot` for the filter in the URL (`team`, `start`, `end`,
+  `granularity`; absent means the gateway's default: every team you may see, the last 30 days). Bookmarks and
+  the back button work, and links that don't parse fall back to the defaults.
+- `/analytics/engineers/:id` shows one engineer's burnout score and its parts, time of day and latest alerts for
+  the same dates (`GET /api/v1/scores/engineers/{id}`, then `/api/v1/alerts`).
+- Pages load with `apiResource()` (`core/http/api-resource.ts`): a request per filter, the previous one
+  cancelled, errors shown on the page. While the next filter loads, the last figures stay on screen, dimmed.
+- Charts are ECharts through ngx-echarts, loaded only with the analytics pages. Their options are pure functions
+  (`charts/chart-options.ts`), tested without drawing, and every chart has a table view. Colors live in
+  `charts/palette.ts` and were checked for color-vision deficiency; severity is one blue from dark (P1) to
+  light (P5).
+- Fairness and burnout come from the scorer. When it's down, or a manager looks at several teams at once, the
+  page says why and shows everything else.
+- Date fields read and show dates day first (13/10/2026).

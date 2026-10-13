@@ -42,6 +42,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/analytics/analytics-page').then((m) => m.AnalyticsPage),
       },
+      {
+        // The gateway decides who may see whom: managers their teams, engineers themselves
+        path: 'analytics/engineers/:engineerId',
+        title: 'Engineer · Fairness',
+        loadComponent: () =>
+          import('./features/analytics/engineer-page').then((m) => m.EngineerPage),
+      },
       upcoming('alerts', 'Alerts', 'The alert list and paging history arrive in Group 10.'),
       upcoming('oncall', 'On-call', 'On-call shifts arrive in Group 10.'),
       upcoming('engineers', 'Engineers', 'Engineer management arrives in Group 10.', MANAGERS),
