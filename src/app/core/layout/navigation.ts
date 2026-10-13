@@ -16,6 +16,7 @@ export const NAVIGATION: readonly NavItem[] = [
   { label: 'Analytics', icon: 'insights', path: '/analytics' },
   { label: 'Alerts', icon: 'notifications', path: '/alerts' },
   { label: 'On-call', icon: 'calendar_month', path: '/oncall' },
+  { label: 'My reports', icon: 'description', path: '/reports' },
   { label: 'Engineers', icon: 'person', path: '/engineers', roles: MANAGERS },
   { label: 'Teams', icon: 'groups', path: '/teams', roles: MANAGERS },
   { label: 'Users', icon: 'manage_accounts', path: '/admin/users', roles: ADMINS },

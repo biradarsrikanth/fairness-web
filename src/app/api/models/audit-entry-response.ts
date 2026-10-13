@@ -17,7 +17,8 @@ export interface AuditEntryResponse {
     | 'USER_DELETED'
     | 'SYNC_TRIGGERED'
     | 'INCIDENT_RESOLVED'
-    | 'WEBHOOK_REPLAYED';
+    | 'WEBHOOK_REPLAYED'
+    | 'REPORT_EXPORTED';
   actorEmail?: string | null;
   details?: {
     [key: string]: any;

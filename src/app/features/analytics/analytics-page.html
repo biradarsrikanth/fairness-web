@@ -3,6 +3,7 @@
   @if (windowText()) {
     <p class="window">{{ windowText() }}</p>
   }
+  <app-export-menu class="export" [request]="reportRequest()" />
 </header>
 
 <app-filter-bar

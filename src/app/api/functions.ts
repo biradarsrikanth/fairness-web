@@ -69,6 +69,16 @@ export type { GetWebhookEvent$Params as GetWebhookEvent$Params } from './fn/page
 export { getWebhookEvent as getWebhookEvent } from './fn/pager-duty-sync-activity/get-webhook-event';
 export type { ReplayWebhookEvent$Params as ReplayWebhookEvent$Params } from './fn/pager-duty-sync-activity/replay-webhook-event';
 export { replayWebhookEvent as replayWebhookEvent } from './fn/pager-duty-sync-activity/replay-webhook-event';
+export type { DownloadAnalyticsReport$Pdf$Params as DownloadAnalyticsReport$Pdf$Params } from './fn/reports/download-analytics-report-pdf';
+export { downloadAnalyticsReport$Pdf as downloadAnalyticsReport$Pdf } from './fn/reports/download-analytics-report-pdf';
+export type { DownloadAnalyticsReport$VndOpenxmlformatsOfficedocumentSpreadsheetmlSheet$Params as DownloadAnalyticsReport$VndOpenxmlformatsOfficedocumentSpreadsheetmlSheet$Params } from './fn/reports/download-analytics-report-vnd-openxmlformats-officedocument-spreadsheetml-sheet';
+export { downloadAnalyticsReport$VndOpenxmlformatsOfficedocumentSpreadsheetmlSheet as downloadAnalyticsReport$VndOpenxmlformatsOfficedocumentSpreadsheetmlSheet } from './fn/reports/download-analytics-report-vnd-openxmlformats-officedocument-spreadsheetml-sheet';
+export type { DownloadEngineerReport$Pdf$Params as DownloadEngineerReport$Pdf$Params } from './fn/reports/download-engineer-report-pdf';
+export { downloadEngineerReport$Pdf as downloadEngineerReport$Pdf } from './fn/reports/download-engineer-report-pdf';
+export type { DownloadEngineerReport$VndOpenxmlformatsOfficedocumentSpreadsheetmlSheet$Params as DownloadEngineerReport$VndOpenxmlformatsOfficedocumentSpreadsheetmlSheet$Params } from './fn/reports/download-engineer-report-vnd-openxmlformats-officedocument-spreadsheetml-sheet';
+export { downloadEngineerReport$VndOpenxmlformatsOfficedocumentSpreadsheetmlSheet as downloadEngineerReport$VndOpenxmlformatsOfficedocumentSpreadsheetmlSheet } from './fn/reports/download-engineer-report-vnd-openxmlformats-officedocument-spreadsheetml-sheet';
+export type { ListReportExports$Params as ListReportExports$Params } from './fn/reports/list-report-exports';
+export { listReportExports as listReportExports } from './fn/reports/list-report-exports';
 export type { GetBurnoutScores$Params as GetBurnoutScores$Params } from './fn/scores/get-burnout-scores';
 export { getBurnoutScores as getBurnoutScores } from './fn/scores/get-burnout-scores';
 export type { GetEngineerScores$Params as GetEngineerScores$Params } from './fn/scores/get-engineer-scores';

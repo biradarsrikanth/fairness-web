@@ -51,6 +51,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/oncall/oncall-page').then((m) => m.OncallPage),
       },
       {
+        path: 'reports',
+        title: 'My reports · Fairness',
+        loadComponent: () => import('./features/reports/exports-page').then((m) => m.ExportsPage),
+      },
+      {
         path: 'engineers',
         title: 'Engineers · Fairness',
         canActivate: [roleGuard(...MANAGERS)],

@@ -34,6 +34,8 @@ import { burnoutBreakdown, burnoutConfidence } from './burnout-breakdown';
 import { Chart } from './charts/chart';
 import { ChartCard } from './charts/chart-card';
 import { DAY_PARTS, timeOfDayOption } from './charts/chart-options';
+import { ExportMenu } from '../reports/export-menu';
+import { ReportRequest } from '../reports/report-downloads';
 import { FilterBar } from './filter-bar';
 
 const RECENT_ALERTS = 10;
@@ -41,7 +43,16 @@ const RECENT_ALERTS = 10;
 /** One engineer over the page's dates: their burnout score and its parts, time of day, latest alerts. */
 @Component({
   selector: 'app-engineer-page',
-  imports: [Chart, ChartCard, FilterBar, MatButtonModule, MatIconModule, RiskBadge, RouterLink],
+  imports: [
+    Chart,
+    ChartCard,
+    ExportMenu,
+    FilterBar,
+    MatButtonModule,
+    MatIconModule,
+    RiskBadge,
+    RouterLink,
+  ],
   templateUrl: './engineer-page.html',
   styleUrl: './engineer-page.scss',
 })
@@ -111,6 +122,20 @@ export class EngineerPage {
   protected readonly alertsError = computed(() => {
     const error = this.alerts.error();
     return error ? describeError(error) : null;
+  });
+
+  /** Exports cover exactly the days on screen */
+  protected readonly reportRequest = computed<ReportRequest | null>(() => {
+    const window = this.window();
+    const data = this.data();
+    return window && data
+      ? {
+          kind: 'engineer',
+          engineerId: data.engineer.engineerId,
+          start: window.start,
+          end: window.end,
+        }
+      : null;
   });
 
   protected readonly windowText = computed(() => {

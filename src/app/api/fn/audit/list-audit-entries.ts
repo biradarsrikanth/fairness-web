@@ -25,7 +25,8 @@ export interface ListAuditEntries$Params {
     | 'USER_DELETED'
     | 'SYNC_TRIGGERED'
     | 'INCIDENT_RESOLVED'
-    | 'WEBHOOK_REPLAYED';
+    | 'WEBHOOK_REPLAYED'
+    | 'REPORT_EXPORTED';
   userId?: number;
   start?: string;
   end?: string;

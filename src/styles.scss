@@ -195,3 +195,8 @@ body {
 .nowrap {
   white-space: nowrap;
 }
+
+.data-table .failed {
+  color: var(--delta-bad);
+  font-weight: 500;
+}

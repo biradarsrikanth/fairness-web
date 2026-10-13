@@ -37,10 +37,12 @@ export type { PageResponseAlertResponse } from './models/page-response-alert-res
 export type { PageResponseAuditEntryResponse } from './models/page-response-audit-entry-response';
 export type { PageResponseEngineerResponse } from './models/page-response-engineer-response';
 export type { PageResponseOncallShiftResponse } from './models/page-response-oncall-shift-response';
+export type { PageResponseReportExportResponse } from './models/page-response-report-export-response';
 export type { PageResponseSyncRunResponse } from './models/page-response-sync-run-response';
 export type { PageResponseUserAccountResponse } from './models/page-response-user-account-response';
 export type { PageResponseWebhookEventResponse } from './models/page-response-webhook-event-response';
 export type { Priority } from './models/priority';
+export type { ReportExportResponse } from './models/report-export-response';
 export type { ScoresStatus } from './models/scores-status';
 export type { ScoreWindow } from './models/score-window';
 export type { SeriesPoint } from './models/series-point';

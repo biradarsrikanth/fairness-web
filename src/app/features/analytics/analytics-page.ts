@@ -31,6 +31,8 @@ import {
   severitiesIn,
   trendPeriodLabel,
 } from './charts/chart-options';
+import { ExportMenu } from '../reports/export-menu';
+import { ReportRequest } from '../reports/report-downloads';
 import { FilterBar } from './filter-bar';
 import { KpiTiles } from './kpi-tiles';
 import { scoresUnavailableReason } from './kpis';
@@ -46,6 +48,7 @@ import { TopServices } from './top-services';
     BurnoutTable,
     Chart,
     ChartCard,
+    ExportMenu,
     FilterBar,
     KpiTiles,
     MatButtonModule,
@@ -96,6 +99,14 @@ export class AnalyticsPage {
   protected readonly error = computed(() => {
     const error = this.snapshot.error();
     return error ? describeError(error) : null;
+  });
+
+  /** Exports cover exactly the days on screen */
+  protected readonly reportRequest = computed<ReportRequest | null>(() => {
+    const window = this.data()?.summary.window;
+    return window
+      ? { kind: 'analytics', team: this.filter().team, start: window.start, end: window.end }
+      : null;
   });
 
   protected readonly windowText = computed(() => {

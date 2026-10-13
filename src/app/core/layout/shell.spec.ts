@@ -33,7 +33,7 @@ describe('Shell', () => {
   }
 
   it('shows an engineer the shared pages only', async () => {
-    expect(await menuFor('ENGINEER')).toEqual(['Analytics', 'Alerts', 'On-call']);
+    expect(await menuFor('ENGINEER')).toEqual(['Analytics', 'Alerts', 'On-call', 'My reports']);
   });
 
   it('adds engineers and teams for a manager', async () => {
@@ -41,6 +41,7 @@ describe('Shell', () => {
       'Analytics',
       'Alerts',
       'On-call',
+      'My reports',
       'Engineers',
       'Teams',
     ]);
@@ -51,6 +52,7 @@ describe('Shell', () => {
       'Analytics',
       'Alerts',
       'On-call',
+      'My reports',
       'Engineers',
       'Teams',
       'Users',

@@ -4,16 +4,19 @@
 </a>
 
 <header class="page-header">
-  <h1>{{ data()?.engineer?.name ?? 'Engineer' }}</h1>
-  @if (data(); as data) {
-    <p class="meta">
-      {{ data.engineer.team }}
-      @if (!data.active) {
-        · <span class="inactive">Inactive</span>
-      }
-      · {{ windowText() }}
-    </p>
-  }
+  <div>
+    <h1>{{ data()?.engineer?.name ?? 'Engineer' }}</h1>
+    @if (data(); as data) {
+      <p class="meta">
+        {{ data.engineer.team }}
+        @if (!data.active) {
+          · <span class="inactive">Inactive</span>
+        }
+        · {{ windowText() }}
+      </p>
+    }
+  </div>
+  <app-export-menu [request]="reportRequest()" />
 </header>
 
 <app-filter-bar

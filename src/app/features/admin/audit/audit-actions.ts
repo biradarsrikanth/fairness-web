@@ -23,6 +23,7 @@ export const AUDIT_ACTIONS: readonly { value: AuditAction; label: string; group:
   { value: 'SYNC_TRIGGERED', label: 'Started a PagerDuty sync', group: 'PagerDuty' },
   { value: 'INCIDENT_RESOLVED', label: 'Resolved a PagerDuty incident', group: 'PagerDuty' },
   { value: 'WEBHOOK_REPLAYED', label: 'Replayed a webhook', group: 'PagerDuty' },
+  { value: 'REPORT_EXPORTED', label: 'Downloaded a report', group: 'Reports' },
 ];
 
 export function actionLabel(action: AuditAction): string {

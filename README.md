@@ -103,3 +103,6 @@ pages: the gateway checks every request.
 - Fairness and burnout come from the scorer. When it's down, or a manager looks at several teams at once, the
   page says why and shows everything else.
 - Date fields read and show dates day first (13/10/2026).
+- **Export** (analytics and engineer pages) downloads a PDF or Excel report of exactly the days on screen, built
+  by the gateway (`features/reports`). A failed download's error arrives as a Blob; `readableError()` turns it
+  back into problem details. Reports cover at most 366 days.

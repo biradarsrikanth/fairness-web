@@ -1,0 +1,95 @@
+<div class="page">
+  <div class="page-bar">
+    <h1>My reports</h1>
+    <a matButton routerLink="/analytics">
+      <mat-icon>insights</mat-icon>
+      Export from Analytics
+    </a>
+  </div>
+  <p class="muted">
+    Reports you downloaded. Files aren't stored: downloading again makes the report from today's
+    data.
+  </p>
+
+  @if (error()) {
+    <div class="page-problem" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      <span>Couldn't load your reports. {{ error() }}</span>
+      <button matButton type="button" (click)="exports.reload()">Try again</button>
+    </div>
+  }
+
+  @if (data(); as page) {
+    <section class="panel" [style.opacity]="exports.isLoading() ? 0.55 : 1">
+      @if (page.content.length === 0) {
+        <p class="muted">No reports yet. Use Export on the Analytics page or an engineer's page.</p>
+      } @else {
+        <div class="table-scroll">
+          <table class="data-table" aria-label="My reports">
+            <thead>
+              <tr>
+                <th scope="col">Requested</th>
+                <th scope="col">Report</th>
+                <th scope="col">Dates</th>
+                <th scope="col">Format</th>
+                <th scope="col">Result</th>
+                <th scope="col" class="num">Size</th>
+                <th scope="col" class="num">Took</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of page.content; track row.id) {
+                <tr>
+                  <td class="nowrap">{{ when(row.createdAt) }}</td>
+                  <td>
+                    {{ row.type === 'ENGINEER' ? 'Engineer' : 'Analytics' }} · {{ subject(row) }}
+                  </td>
+                  <td class="nowrap">{{ formatRange(row.start, row.end) }}</td>
+                  <td>{{ row.format === 'XLSX' ? 'Excel' : 'PDF' }}</td>
+                  <td>
+                    @switch (row.status) {
+                      @case ('SUCCEEDED') {
+                        Downloaded
+                      }
+                      @case ('FAILED') {
+                        <span class="failed" [matTooltip]="row.error ?? ''">Failed</span>
+                      }
+                      @default {
+                        Being made
+                      }
+                    }
+                  </td>
+                  <td class="num">{{ fileSize(row.sizeBytes) }}</td>
+                  <td class="num">{{ took(row.durationMs) }}</td>
+                  <td class="num nowrap">
+                    @if (repeatRequest(row)) {
+                      <button
+                        matButton
+                        type="button"
+                        [disabled]="repeating() !== null"
+                        (click)="again(row)"
+                      >
+                        {{ repeating() === row.id ? 'Preparing…' : 'Download again' }}
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <mat-paginator
+        [length]="page.totalElements"
+        [pageIndex]="page.page"
+        [pageSize]="page.size"
+        [pageSizeOptions]="pageSizes"
+        (page)="paged($event)"
+        aria-label="Pages of reports"
+      />
+    </section>
+  } @else if (exports.isLoading()) {
+    <p class="muted" role="status">Loading your reports…</p>
+  }
+</div>
