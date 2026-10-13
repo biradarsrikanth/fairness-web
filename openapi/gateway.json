@@ -5,12 +5,6 @@
     "description": "On-call fairness and burnout tracking for PagerDuty. Sign in with POST /api/v1/auth/login, then send the accessToken as a Bearer token (in Swagger UI: Authorize). Every error is an ApiError (RFC 9457 problem details, application/problem+json); branch on its code.",
     "version": "v1"
   },
-  "servers": [
-    {
-      "url": "http://localhost:8080",
-      "description": "Generated server url"
-    }
-  ],
   "security": [
     {
       "bearerAuth": []
@@ -74,7 +68,7 @@
         ],
         "summary": "List alerts",
         "description": "Filters combine with AND. Sort by triggeredAt (default, newest first), resolvedAt, severity or status.",
-        "operationId": "list_2",
+        "operationId": "listAlerts",
         "parameters": [
           {
             "name": "engineerId",
@@ -197,7 +191,7 @@
         "tags": [
           "Alerts"
         ],
-        "operationId": "saveAlert",
+        "operationId": "createAlert",
         "requestBody": {
           "content": {
             "application/json": {
@@ -237,7 +231,7 @@
         "tags": [
           "Alerts"
         ],
-        "operationId": "getById_2",
+        "operationId": "getAlert",
         "parameters": [
           {
             "name": "id",
@@ -276,7 +270,7 @@
         "tags": [
           "Alerts"
         ],
-        "operationId": "deleteEvent",
+        "operationId": "deleteAlert",
         "parameters": [
           {
             "name": "id",
@@ -310,7 +304,7 @@
         "tags": [
           "Alerts"
         ],
-        "operationId": "getAssignments",
+        "operationId": "listAlertAssignments",
         "parameters": [
           {
             "name": "id",
@@ -356,7 +350,7 @@
         ],
         "summary": "Alert counts per period, by severity",
         "description": "Every period, quiet ones as zeros.",
-        "operationId": "alertsOverTime",
+        "operationId": "getAlertsOverTime",
         "parameters": [
           {
             "name": "team",
@@ -427,7 +421,7 @@
         ],
         "summary": "Alerts by weekday and hour",
         "description": "In each team's own timezone; all 168 cells.",
-        "operationId": "heatmap",
+        "operationId": "getAlertHeatmap",
         "parameters": [
           {
             "name": "team",
@@ -497,7 +491,7 @@
           "Analytics"
         ],
         "summary": "The ten services with the most alerts",
-        "operationId": "topServices",
+        "operationId": "getTopServices",
         "parameters": [
           {
             "name": "team",
@@ -568,7 +562,7 @@
         ],
         "summary": "Everything above in one response",
         "description": "What the page loads at once and the PDF and Excel reports are built from.",
-        "operationId": "snapshot",
+        "operationId": "getAnalyticsSnapshot",
         "parameters": [
           {
             "name": "team",
@@ -639,7 +633,7 @@
         ],
         "summary": "KPIs with the change from the previous period",
         "description": "Alerts, MTTA, MTTR, after-hours %, escalation rate; Gini and high-risk engineers from the scorer when available.",
-        "operationId": "summary",
+        "operationId": "getAnalyticsSummary",
         "parameters": [
           {
             "name": "team",
@@ -710,7 +704,7 @@
         ],
         "summary": "Gini and burnout per week or month",
         "description": "From the scorer; weekly unless granularity=month or the window is longer than 110 weeks.",
-        "operationId": "trend",
+        "operationId": "getScoreTrend",
         "parameters": [
           {
             "name": "team",
@@ -781,7 +775,7 @@
         ],
         "summary": "List audit entries",
         "description": "Newest first. Filters combine with AND.",
-        "operationId": "list_3",
+        "operationId": "listAuditEntries",
         "parameters": [
           {
             "name": "action",
@@ -1019,7 +1013,7 @@
           "Auth"
         ],
         "summary": "The signed-in user, with the teams they can see",
-        "operationId": "me",
+        "operationId": "getCurrentUser",
         "responses": {
           "200": {
             "description": "OK",
@@ -1051,7 +1045,7 @@
         ],
         "summary": "Get a new access token",
         "description": "Uses the refresh cookie, which is replaced. On failure the cookie is cleared: sign in again.",
-        "operationId": "refresh",
+        "operationId": "refreshSession",
         "responses": {
           "200": {
             "description": "OK",
@@ -1088,7 +1082,7 @@
         ],
         "summary": "List engineers",
         "description": "Sort by name (default) or email.",
-        "operationId": "list_1",
+        "operationId": "listEngineers",
         "parameters": [
           {
             "name": "team",
@@ -1173,7 +1167,7 @@
         "tags": [
           "Engineers"
         ],
-        "operationId": "saveEngineer",
+        "operationId": "createEngineer",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1213,7 +1207,7 @@
         "tags": [
           "Engineers"
         ],
-        "operationId": "getById_1",
+        "operationId": "getEngineer",
         "parameters": [
           {
             "name": "id",
@@ -1337,7 +1331,7 @@
         ],
         "summary": "List on-call shifts",
         "description": "Shifts overlapping [start, end] (UTC dates, inclusive, at most 366 days apart), optionally for one engineer. Sort by startsAt (default) or endsAt.",
-        "operationId": "shifts",
+        "operationId": "listOncallShifts",
         "parameters": [
           {
             "name": "start",
@@ -1434,7 +1428,7 @@
         "tags": [
           "PagerDuty"
         ],
-        "operationId": "getIncidents",
+        "operationId": "listPagerDutyIncidents",
         "parameters": [
           {
             "name": "offset",
@@ -1489,7 +1483,7 @@
         "tags": [
           "PagerDuty"
         ],
-        "operationId": "resolveIncident",
+        "operationId": "resolvePagerDutyIncident",
         "parameters": [
           {
             "name": "incidentId",
@@ -1572,7 +1566,7 @@
         ],
         "summary": "List sync runs",
         "description": "Newest first. Filters combine with AND.",
-        "operationId": "listRuns",
+        "operationId": "listSyncRuns",
         "parameters": [
           {
             "name": "kind",
@@ -1678,7 +1672,7 @@
         "tags": [
           "PagerDuty sync activity"
         ],
-        "operationId": "getRun",
+        "operationId": "getSyncRun",
         "parameters": [
           {
             "name": "id",
@@ -1721,7 +1715,7 @@
         ],
         "summary": "Latest sync of each kind",
         "description": "Whether one is running, the last run and the last successful one.",
-        "operationId": "status",
+        "operationId": "getSyncStatus",
         "responses": {
           "200": {
             "description": "OK",
@@ -1797,7 +1791,7 @@
         "tags": [
           "PagerDuty"
         ],
-        "operationId": "getUsers",
+        "operationId": "listPagerDutyUsers",
         "responses": {
           "200": {
             "description": "OK",
@@ -1829,7 +1823,7 @@
         ],
         "summary": "List received webhooks",
         "description": "Newest first, without their bodies. Filters combine with AND.",
-        "operationId": "listEvents",
+        "operationId": "listWebhookEvents",
         "parameters": [
           {
             "name": "status",
@@ -1934,7 +1928,7 @@
         "tags": [
           "PagerDuty sync activity"
         ],
-        "operationId": "getEvent",
+        "operationId": "getWebhookEvent",
         "parameters": [
           {
             "name": "id",
@@ -1977,7 +1971,7 @@
         ],
         "summary": "Apply a received webhook again",
         "description": "For a FAILED event, or one stuck in RECEIVED. 409 if it was already applied. Answers with the event's new state, or the error that made it fail again.",
-        "operationId": "replayEvent",
+        "operationId": "replayWebhookEvent",
         "parameters": [
           {
             "name": "id",
@@ -2019,7 +2013,7 @@
           "Scores"
         ],
         "description": "Admins and managers only. Admins may omit team; managers get their only team, or must name one.",
-        "operationId": "burnout",
+        "operationId": "getBurnoutScores",
         "parameters": [
           {
             "name": "days",
@@ -2090,7 +2084,7 @@
         "tags": [
           "Scores"
         ],
-        "operationId": "engineer",
+        "operationId": "getEngineerScores",
         "parameters": [
           {
             "name": "engineerId",
@@ -2172,7 +2166,7 @@
           "Scores"
         ],
         "description": "Admins may omit team (all teams); others get their only team, or must name one.",
-        "operationId": "fairness",
+        "operationId": "getFairnessScores",
         "parameters": [
           {
             "name": "days",
@@ -2244,7 +2238,7 @@
           "Scores"
         ],
         "description": "Admins may omit team (all teams); others get their only team, or must name one.",
-        "operationId": "timeOfDay",
+        "operationId": "getTimeOfDayScores",
         "parameters": [
           {
             "name": "days",
@@ -2315,7 +2309,7 @@
         "tags": [
           "Teams"
         ],
-        "operationId": "getAll",
+        "operationId": "listTeams",
         "responses": {
           "200": {
             "description": "OK",
@@ -2346,7 +2340,7 @@
         "tags": [
           "Teams"
         ],
-        "operationId": "create_1",
+        "operationId": "createTeam",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2386,7 +2380,7 @@
         "tags": [
           "Teams"
         ],
-        "operationId": "getById",
+        "operationId": "getTeam",
         "parameters": [
           {
             "name": "id",
@@ -2425,7 +2419,7 @@
         "tags": [
           "Teams"
         ],
-        "operationId": "update_1",
+        "operationId": "updateTeam",
         "parameters": [
           {
             "name": "id",
@@ -2474,7 +2468,7 @@
         "tags": [
           "Teams"
         ],
-        "operationId": "delete_1",
+        "operationId": "deleteTeam",
         "parameters": [
           {
             "name": "id",
@@ -2510,7 +2504,7 @@
         ],
         "summary": "List users",
         "description": "Sort by email (default), fullName, role or lastLoginAt.",
-        "operationId": "list",
+        "operationId": "listUsers",
         "parameters": [
           {
             "name": "role",
@@ -2610,7 +2604,7 @@
         ],
         "summary": "Create a user",
         "description": "Returns a one-time password, shown only here; the user must change it at first sign-in.",
-        "operationId": "create",
+        "operationId": "createUser",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2650,7 +2644,7 @@
         "tags": [
           "Users"
         ],
-        "operationId": "get",
+        "operationId": "getUser",
         "parameters": [
           {
             "name": "id",
@@ -2691,7 +2685,7 @@
         ],
         "summary": "Update a user",
         "description": "Changing the role or disabling the user ends their sessions.",
-        "operationId": "update",
+        "operationId": "updateUser",
         "parameters": [
           {
             "name": "id",
@@ -2740,7 +2734,7 @@
         "tags": [
           "Users"
         ],
-        "operationId": "delete",
+        "operationId": "deleteUser",
         "parameters": [
           {
             "name": "id",
@@ -2776,7 +2770,7 @@
         ],
         "summary": "Reset a user's password",
         "description": "Returns a new one-time password, ends the user's sessions and lifts any lock.",
-        "operationId": "resetPassword",
+        "operationId": "resetUserPassword",
         "parameters": [
           {
             "name": "id",
@@ -2819,7 +2813,7 @@
         ],
         "summary": "Set the teams a manager can see",
         "description": "Replaces the list; only for MANAGER logins.",
-        "operationId": "setTeams",
+        "operationId": "setUserTeams",
         "parameters": [
           {
             "name": "id",
@@ -2871,7 +2865,7 @@
           "Users"
         ],
         "summary": "Lift a lock from failed sign-ins",
-        "operationId": "unlock",
+        "operationId": "unlockUser",
         "parameters": [
           {
             "name": "id",
@@ -2912,7 +2906,7 @@
         "tags": [
           "Webhooks"
         ],
-        "operationId": "handleWebhook",
+        "operationId": "receivePagerDutyWebhook",
         "parameters": [
           {
             "name": "X-PagerDuty-Signature",
