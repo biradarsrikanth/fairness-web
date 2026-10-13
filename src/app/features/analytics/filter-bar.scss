@@ -1,0 +1,31 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.team {
+  width: 200px;
+}
+
+.preset {
+  width: 168px;
+}
+
+.dates {
+  width: 248px;
+}
+
+.granularity {
+  height: 56px;
+  align-items: center;
+}
+
+@media (max-width: 599px) {
+  .team,
+  .preset,
+  .dates {
+    width: 100%;
+  }
+}

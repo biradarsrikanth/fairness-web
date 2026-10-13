@@ -1,0 +1,59 @@
+<div class="bar" role="group" aria-label="Filters">
+  @if (showTeam()) {
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="team">
+      <mat-label>Team</mat-label>
+      <mat-select [value]="team()" (selectionChange)="selectTeam($event.value)">
+        @for (option of teams(); track option.value) {
+          <mat-option [value]="option.value ?? allTeams">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="preset">
+    <mat-label>Period</mat-label>
+    <mat-select [value]="preset()" (selectionChange)="selectPreset($event.value)">
+      @for (option of presets; track option.days) {
+        <mat-option [value]="'' + option.days">{{ option.label }}</mat-option>
+      }
+      <mat-option [value]="custom" disabled>Custom range</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="dates">
+    <mat-label>From – to</mat-label>
+    <mat-date-range-input [rangePicker]="picker" [min]="minDate()" [max]="maxDate()">
+      <input
+        matStartDate
+        placeholder="Start"
+        aria-label="Start date"
+        [value]="startDate()"
+        (dateChange)="startChanged($event.value)"
+      />
+      <input
+        matEndDate
+        placeholder="End"
+        aria-label="End date"
+        [value]="endDate()"
+        (dateChange)="endChanged($event.value)"
+      />
+    </mat-date-range-input>
+    <mat-datepicker-toggle matIconSuffix [for]="picker" />
+    <mat-date-range-picker #picker />
+  </mat-form-field>
+
+  @if (showGranularity()) {
+    <mat-button-toggle-group
+      class="granularity"
+      aria-label="Group by"
+      hideSingleSelectionIndicator
+      [value]="filter().granularity ?? 'auto'"
+      (change)="selectGranularity($event.value)"
+    >
+      <mat-button-toggle value="auto">Auto</mat-button-toggle>
+      <mat-button-toggle value="day" [disabled]="!dailyAllowed()">Day</mat-button-toggle>
+      <mat-button-toggle value="week">Week</mat-button-toggle>
+      <mat-button-toggle value="month">Month</mat-button-toggle>
+    </mat-button-toggle-group>
+  }
+</div>
