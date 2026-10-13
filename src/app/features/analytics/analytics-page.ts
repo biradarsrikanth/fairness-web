@@ -29,6 +29,7 @@ import {
   loadShareOption,
   periodLabel,
   severitiesIn,
+  trendPeriodLabel,
 } from './charts/chart-options';
 import { FilterBar } from './filter-bar';
 import { KpiTiles } from './kpi-tiles';
@@ -74,7 +75,12 @@ export class AnalyticsPage {
       }),
     { equal: sameFilter },
   );
-  protected readonly queryParams = computed(() => clean(toQueryParams(this.filter())));
+  /** For links to an engineer: this filter, with the dates on screen so both pages cover the same days. */
+  protected readonly engineerParams = computed(() => {
+    const params = clean(toQueryParams(this.filter()));
+    const window = this.data()?.summary.window;
+    return window ? { ...params, start: window.start, end: window.end } : params;
+  });
   protected readonly teams = computed(() =>
     teamOptions(this.auth.role(), this.auth.user()?.teams ?? []),
   );
@@ -119,7 +125,7 @@ export class AnalyticsPage {
   });
   protected readonly giniChart = computed(() => {
     const trend = this.data()?.trend;
-    return trend ? giniTrendOption(trend.periods, trend.granularity) : null;
+    return trend ? giniTrendOption(trend.periods, trend.granularity, trend.window.timezone) : null;
   });
   protected readonly loadChart = computed(() => {
     const data = this.data();
@@ -146,6 +152,7 @@ export class AnalyticsPage {
   protected readonly hours = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0'));
 
   protected readonly periodLabel = periodLabel;
+  protected readonly trendPeriodLabel = trendPeriodLabel;
   protected readonly formatPct = formatPct;
   protected readonly humanize = humanize;
 
@@ -160,7 +167,7 @@ export class AnalyticsPage {
     const engineerId = (event.data as { engineerId?: number } | undefined)?.engineerId;
     if (engineerId !== undefined) {
       void this.router.navigate(['/analytics/engineers', engineerId], {
-        queryParams: this.queryParams(),
+        queryParams: this.engineerParams(),
       });
     }
   }

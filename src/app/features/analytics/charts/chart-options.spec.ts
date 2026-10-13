@@ -63,8 +63,8 @@ describe('chart options', () => {
   it('draws the Gini against the label thresholds, with low-confidence points hollow', () => {
     const periods: TrendPeriod[] = [
       {
-        start: '2026-09-07',
-        end: '2026-09-13',
+        start: '2026-09-07T00:00:00+05:30',
+        end: '2026-09-14T00:00:00+05:30',
         label: '2026-W37',
         gini: 0.31,
         alertCount: 30,
@@ -73,8 +73,8 @@ describe('chart options', () => {
         confidence: 'NORMAL',
       },
       {
-        start: '2026-09-14',
-        end: '2026-09-20',
+        start: '2026-09-14T00:00:00+05:30',
+        end: '2026-09-21T00:00:00+05:30',
         label: '2026-W38',
         gini: 0.82,
         alertCount: 4,
@@ -83,7 +83,9 @@ describe('chart options', () => {
         confidence: 'LOW',
       },
     ];
-    const option: Loose = giniTrendOption(periods, 'week');
+    // Midnight in India is the evening before in UTC; the labels must still name the Monday
+    const option: Loose = giniTrendOption(periods, 'week', 'Asia/Kolkata');
+    expect(option.xAxis.data).toEqual(['7 Sept', '14 Sept'].map((l) => l.replace('Sept', sep())));
     expect(option.series[0].data.map((d: Loose) => d.symbol)).toEqual(['circle', 'emptyCircle']);
     expect(option.series[0].markLine.data.map((d: Loose) => d.yAxis)).toEqual([0.2, 0.4, 0.6]);
     expect(option.yAxis.max).toBe(0.9);
@@ -140,3 +142,10 @@ describe('chart options', () => {
     );
   });
 });
+
+/** How this runtime's ICU abbreviates September in en-GB ("Sep" or "Sept"). */
+function sep(): string {
+  return new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' }).format(
+    new Date('2026-09-01T00:00:00Z'),
+  );
+}

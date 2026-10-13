@@ -103,6 +103,25 @@ export function todayIn(timeZone: string, now = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone }).format(now);
 }
 
+/** The day an instant falls on in a timezone, as YYYY-MM-DD. */
+export function dayIn(instant: string, timeZone: string): string {
+  return todayIn(timeZone, new Date(instant));
+}
+
+/**
+ * The scorer's window (timestamps; the end exclusive) as the days it covers in its timezone, like the
+ * gateway's analytics windows.
+ */
+export function windowDays(window: { start: string; end: string; timezone: string }): {
+  start: string;
+  end: string;
+} {
+  return {
+    start: dayIn(window.start, window.timezone),
+    end: todayIn(window.timezone, new Date(Date.parse(window.end) - 1)),
+  };
+}
+
 export function addDays(day: string, days: number): string {
   const date = new Date(`${day}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + days);

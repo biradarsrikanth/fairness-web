@@ -67,8 +67,9 @@ export function snapshot(overrides: Partial<Snapshot> = {}): Snapshot {
       scores: { available: true, reason: null },
       periods: [
         {
-          start: '2026-09-14',
-          end: '2026-09-20',
+          // The scorer's periods are timestamps: midnight in the team's timezone
+          start: '2026-09-14T00:00:00+05:30',
+          end: '2026-09-21T00:00:00+05:30',
           label: '2026-W38',
           gini: 0.3,
           alertCount: 12,
@@ -111,7 +112,12 @@ export function engineerReport(overrides: Partial<EngineerReport> = {}): Enginee
   return {
     engineer: { engineerId: 3, name: 'Asha Rao', team: 'SRE' },
     active: true,
-    window,
+    // The scorer's window: from midnight on the first day to midnight after the last
+    window: {
+      start: '2026-09-14T00:00:00+05:30',
+      end: '2026-10-14T00:00:00+05:30',
+      timezone: 'Asia/Kolkata',
+    },
     teamSharePct: 60,
     timeOfDay: { morning: 2, afternoon: 3, evening: 3, night: 4 },
     burnout,

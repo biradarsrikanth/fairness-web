@@ -23,7 +23,13 @@ import {
   formatRange,
   humanize,
 } from '../../shared/format';
-import { AnalyticsFilter, parseFilter, toApiParams, toQueryParams } from './analytics-filter';
+import {
+  AnalyticsFilter,
+  parseFilter,
+  toApiParams,
+  toQueryParams,
+  windowDays,
+} from './analytics-filter';
 import { burnoutBreakdown, burnoutConfidence } from './burnout-breakdown';
 import { Chart } from './charts/chart';
 import { ChartCard } from './charts/chart-card';
@@ -75,14 +81,21 @@ export class EngineerPage {
       (previous?.value?.engineer.engineerId === this.engineerId() ? previous.value : undefined),
   });
 
+  /** The days the report covers (the scorer's window is in timestamps), with their timezone. */
+  protected readonly window = computed(() => {
+    const data = this.data();
+    return data ? { ...windowDays(data.window), timezone: data.window.timezone } : null;
+  });
+
   /** The latest alerts in the report's window, once it's known. */
   protected readonly alerts = apiResource(listAlerts, () => {
     const data = this.data();
-    if (!data) return undefined;
+    const window = this.window();
+    if (!data || !window) return undefined;
     return {
       engineerId: data.engineer.engineerId,
-      start: data.window.start,
-      end: data.window.end,
+      start: window.start,
+      end: window.end,
       page: 0,
       size: RECENT_ALERTS,
     };
@@ -101,7 +114,7 @@ export class EngineerPage {
   });
 
   protected readonly windowText = computed(() => {
-    const window = this.data()?.window;
+    const window = this.window();
     return window ? formatRange(window.start, window.end) : null;
   });
   protected readonly breakdown = computed(() => {

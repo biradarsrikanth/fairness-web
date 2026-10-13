@@ -7,6 +7,7 @@ import {
   TrendPeriod,
 } from '../../../api/models';
 import { formatDayMonth, formatMonth, formatPct } from '../../../shared/format';
+import { dayIn } from '../analytics-filter';
 import {
   CHART_SURFACE,
   EMPTY_CELL,
@@ -169,12 +170,22 @@ export function alertsOverTimeOption(series: TimeSeries): EChartsCoreOption {
   };
 }
 
+/** A trend period (it starts at midnight in the scorer's timezone) by its first day. */
+export function trendPeriodLabel(
+  period: TrendPeriod,
+  granularity: string,
+  timeZone: string,
+): string {
+  return periodLabel(dayIn(period.start, timeZone), granularity);
+}
+
 /** Gini per period, against the label thresholds; low-confidence periods as hollow points. */
 export function giniTrendOption(
   periods: readonly TrendPeriod[],
   granularity: string,
+  timeZone: string,
 ): EChartsCoreOption {
-  const labels = periods.map((p) => periodLabel(p.start, granularity));
+  const labels = periods.map((p) => trendPeriodLabel(p, granularity, timeZone));
   const highest = Math.max(0, ...periods.map((p) => p.gini));
   return {
     textStyle,

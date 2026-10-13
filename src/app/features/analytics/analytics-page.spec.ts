@@ -87,6 +87,10 @@ describe('AnalyticsPage', () => {
     expect(tiles.find((t) => t.label === 'Fairness (Gini)')?.value).toBe('0.31');
     expect(page.querySelectorAll('app-burnout-table tr[mat-row]').length).toBe(2);
     expect(text(page.querySelector('app-top-services')!)).toContain('payments-api');
+    // Engineer links carry the dates on screen
+    expect(page.querySelector('app-burnout-table a')!.getAttribute('href')).toBe(
+      '/analytics/engineers/3?team=SRE&start=2026-09-14&end=2026-10-13&granularity=week',
+    );
   });
 
   it('leaves the defaults to the gateway', async () => {

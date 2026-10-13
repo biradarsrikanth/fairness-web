@@ -7,7 +7,7 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { Assignment } from '../../models/assignment';
+import { AlertAssignment } from '../../models/alert-assignment';
 
 export interface ListAlertAssignments$Params {
   id: number;
@@ -18,7 +18,7 @@ export function listAlertAssignments(
   rootUrl: string,
   params: ListAlertAssignments$Params,
   context?: HttpContext,
-): Observable<StrictHttpResponse<Array<Assignment>>> {
+): Observable<StrictHttpResponse<Array<AlertAssignment>>> {
   const rb = new RequestBuilder(rootUrl, listAlertAssignments.PATH, 'get');
   if (params) {
     rb.path('id', params.id, {});
@@ -27,7 +27,7 @@ export function listAlertAssignments(
   return http.request(rb.build({ responseType: 'json', accept: 'application/json', context })).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Array<Assignment>>;
+      return r as StrictHttpResponse<Array<AlertAssignment>>;
     }),
   );
 }

@@ -3,13 +3,13 @@
 
 import { BurnoutScore } from '../models/burnout-score';
 import { EngineerRef } from '../models/engineer-ref';
+import { ScoreWindow } from '../models/score-window';
 import { TimeOfDayCounts } from '../models/time-of-day-counts';
-import { Window } from '../models/window';
 export interface EngineerReport {
   active: boolean;
   burnout: BurnoutScore;
   engineer: EngineerRef;
   teamSharePct: number;
   timeOfDay: TimeOfDayCounts;
-  window: Window;
+  window: ScoreWindow;
 }

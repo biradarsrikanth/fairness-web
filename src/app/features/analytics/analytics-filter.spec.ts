@@ -11,6 +11,7 @@ import {
   toLocalDate,
   toQueryParams,
   todayIn,
+  windowDays,
 } from './analytics-filter';
 
 describe('analytics filter', () => {
@@ -69,6 +70,16 @@ describe('analytics filter', () => {
     const now = new Date('2026-10-13T20:00:00Z');
     expect(todayIn('Asia/Kolkata', now)).toBe('2026-10-14');
     expect(todayIn('UTC', now)).toBe('2026-10-13');
+  });
+
+  it("turns the scorer's timestamp window into the days it covers", () => {
+    expect(
+      windowDays({
+        start: '2026-09-14T00:00:00+05:30',
+        end: '2026-10-14T00:00:00+05:30',
+        timezone: 'Asia/Kolkata',
+      }),
+    ).toEqual({ start: '2026-09-14', end: '2026-10-13' });
   });
 
   it('converts datepicker dates without shifting the day', () => {

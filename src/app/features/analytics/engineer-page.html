@@ -18,7 +18,7 @@
 
 <app-filter-bar
   [filter]="filter()"
-  [window]="data()?.window ?? null"
+  [window]="window()"
   [showGranularity]="false"
   (changed)="applyDates($event)"
 />

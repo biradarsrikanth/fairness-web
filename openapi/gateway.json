@@ -324,7 +324,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Assignment"
+                    "$ref": "#/components/schemas/AlertAssignment"
                   }
                 }
               }
@@ -3707,32 +3707,9 @@
           "team"
         ]
       },
-      "TimeOfDayReport": {
+      "ScoreWindow": {
         "type": "object",
-        "properties": {
-          "window": {
-            "$ref": "#/components/schemas/Window"
-          },
-          "team": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "engineers": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EngineerTimeOfDay"
-            }
-          }
-        },
-        "required": [
-          "engineers",
-          "window"
-        ]
-      },
-      "Window": {
-        "type": "object",
+        "description": "start: midnight of the first day in the timezone; end: exclusive, midnight after the last day (or the current minute when no end was given)",
         "properties": {
           "start": {
             "type": "string",
@@ -3750,6 +3727,30 @@
           "end",
           "start",
           "timezone"
+        ]
+      },
+      "TimeOfDayReport": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/ScoreWindow"
+          },
+          "team": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "engineers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EngineerTimeOfDay"
+            }
+          }
+        },
+        "required": [
+          "engineers",
+          "window"
         ]
       },
       "EngineerLoad": {
@@ -3810,7 +3811,7 @@
         "type": "object",
         "properties": {
           "window": {
-            "$ref": "#/components/schemas/Window"
+            "$ref": "#/components/schemas/ScoreWindow"
           },
           "team": {
             "type": [
@@ -3982,7 +3983,7 @@
         "type": "object",
         "properties": {
           "window": {
-            "$ref": "#/components/schemas/Window"
+            "$ref": "#/components/schemas/ScoreWindow"
           },
           "engineer": {
             "$ref": "#/components/schemas/EngineerRef"
@@ -4041,7 +4042,7 @@
         "type": "object",
         "properties": {
           "window": {
-            "$ref": "#/components/schemas/Window"
+            "$ref": "#/components/schemas/ScoreWindow"
           },
           "team": {
             "type": [
@@ -4833,6 +4834,28 @@
           "start"
         ]
       },
+      "Window": {
+        "type": "object",
+        "description": "Inclusive dates in the given timezone",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "end",
+          "start",
+          "timezone"
+        ]
+      },
       "Kpi": {
         "type": "object",
         "description": "A figure for the window and the same-length period before it. changePct is null when there's nothing to compare with",
@@ -5211,6 +5234,46 @@
           "size",
           "totalElements",
           "totalPages"
+        ]
+      },
+      "AlertAssignment": {
+        "type": "object",
+        "description": "One step of the paging history, oldest first. kind: PAGED, ESCALATED or REASSIGNED; engineer fields are null when the PagerDuty user isn't one of ours",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "engineerId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "engineerName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pagerDutyUserId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "assignedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "assignedAt",
+          "kind",
+          "source"
         ]
       },
       "ApiError": {

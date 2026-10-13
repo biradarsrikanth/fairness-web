@@ -96,7 +96,9 @@
           <tbody>
             @for (period of data.trend.periods; track period.start) {
               <tr>
-                <th scope="row">{{ periodLabel(period.start, data.trend.granularity) }}</th>
+                <th scope="row">
+                  {{ trendPeriodLabel(period, data.trend.granularity, data.trend.window.timezone) }}
+                </th>
                 <td class="num">{{ period.gini.toFixed(2) }}</td>
                 <td class="num">{{ period.alertCount }}</td>
                 <td class="num">{{ period.averageBurnout?.toFixed(0) ?? '–' }}</td>
@@ -197,7 +199,7 @@
         <h2 id="burnout-heading">{{ isEngineer() ? 'Your burnout' : 'Burnout' }}</h2>
         <p class="sub">Score 0–100 from night and weekend pages, relative load and trend</p>
         @if (data.burnout.length > 0) {
-          <app-burnout-table [rows]="data.burnout" [queryParams]="queryParams()" />
+          <app-burnout-table [rows]="data.burnout" [queryParams]="engineerParams()" />
         } @else {
           <p class="empty">
             {{
