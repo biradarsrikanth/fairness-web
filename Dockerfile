@@ -15,6 +15,8 @@ FROM nginx:1.29-alpine
 
 # The image fills ${GATEWAY_URL} into the template at start-up
 ENV GATEWAY_URL=http://gateway:8080
+# The load balancer in front whose X-Forwarded-For is believed (an address or CIDR); by default none
+ENV TRUSTED_PROXY=127.0.0.1/32
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY nginx/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/dist/fairness-web/browser /usr/share/nginx/html

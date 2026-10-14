@@ -39,6 +39,9 @@ folder instead (http://localhost:8088).
 - `nginx/default.conf.template`: routes, `/healthz` for the container healthcheck, caching (hashed files for a
   year; `index.html`, `theme-boot.js` and the favicon checked on every load, so a release shows at once), gzip
   for the app's files and the gateway's JSON, and 120 s for reports to build.
+- The client address the gateway sees (sign-in rate limit, audit log) is the connection's, or, from a proxy in
+  `TRUSTED_PROXY` (an address or CIDR, e.g. the load balancer's subnet; default none), the address it forwards.
+  A client's own `X-Forwarded-For` is ignored.
 - `nginx/security-headers.conf`: Content-Security-Policy (scripts, styles and fonts from this origin only),
   HSTS when the request came over HTTPS (TLS ends in front of Nginx and sends `X-Forwarded-Proto`),
   `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`.
