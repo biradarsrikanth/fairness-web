@@ -1,8 +1,11 @@
-<header class="page-header">
-  <h1>Analytics</h1>
-  @if (windowText()) {
-    <p class="window">{{ windowText() }}</p>
-  }
+<header class="page-bar">
+  <div>
+    <span class="eyebrow">Monitor / <b>Analytics</b></span>
+    <h1>Analytics</h1>
+    @if (windowText()) {
+      <p class="page-sub">How alert load is shared, {{ windowText() }}.</p>
+    }
+  </div>
   <app-export-menu class="export" [request]="reportRequest()" />
 </header>
 
@@ -15,7 +18,7 @@
 
 @if (error()) {
   <div class="problem" role="alert">
-    <mat-icon aria-hidden="true">error</mat-icon>
+    <mat-icon aria-hidden="true" svgIcon="error" />
     <span>Couldn't load analytics. {{ error() }}</span>
     <button matButton type="button" (click)="snapshot.reload()">Try again</button>
   </div>
@@ -25,16 +28,17 @@
   <div class="content" [class.stale]="snapshot.isLoading()" [attr.aria-busy]="snapshot.isLoading()">
     @if (scoresNotice()) {
       <div class="notice" role="status">
-        <mat-icon aria-hidden="true">info</mat-icon>
+        <mat-icon aria-hidden="true" svgIcon="info" />
         <span>{{ scoresNotice() }}</span>
       </div>
     }
 
-    <app-kpi-tiles [summary]="data.summary" />
+    <app-kpi-tiles [summary]="data.summary" [trends]="trends()" />
 
     <div class="grid">
       <app-chart-card
         heading="Alerts over time"
+        label="Severity / period"
         [subheading]="'By severity, ' + granularityText(data.alertsOverTime.granularity)"
         [empty]="data.summary.alerts.value === 0"
         emptyText="No alerts in this period."
@@ -70,6 +74,7 @@
 
       <app-chart-card
         heading="Fairness over time"
+        label="Gini / period"
         [subheading]="
           'Gini of load ' + granularityText(data.trend.granularity) + '; 0 is perfectly even'
         "
@@ -114,6 +119,7 @@
       @if (isEngineer()) {
         <app-chart-card
           heading="Your share of the load"
+          label="Load"
           subheading="Of your team's on-call load"
           [empty]="data.loadShare.length === 0"
           [emptyText]="scoresReason() + '.'"
@@ -124,7 +130,8 @@
       } @else {
         <app-chart-card
           heading="Load share"
-          subheading="Each engineer's share of the weighted load; select a bar for details"
+          label="Load / engineer"
+          [subheading]="loadSubheading()"
           [empty]="data.loadShare.length === 0"
           [emptyText]="
             data.summary.scores.available ? 'No engineers in this period.' : scoresReason() + '.'
@@ -162,6 +169,7 @@
 
       <app-chart-card
         heading="When alerts fire"
+        label="Weekday × hour"
         subheading="By weekday and hour, in each team's local time"
         [empty]="data.heatmap.max === 0"
         emptyText="No alerts in this period."
@@ -197,6 +205,7 @@
 
     <div class="grid">
       <section class="panel" aria-labelledby="burnout-heading">
+        <span class="eyebrow bracket">Burnout / engineer</span>
         <h2 id="burnout-heading">{{ isEngineer() ? 'Your burnout' : 'Burnout' }}</h2>
         <p class="sub">Score 0–100 from night and weekend pages, relative load and trend</p>
         @if (data.burnout.length > 0) {
@@ -211,6 +220,7 @@
       </section>
 
       <section class="panel" aria-labelledby="services-heading">
+        <span class="eyebrow bracket">Alerts / service</span>
         <h2 id="services-heading">Noisiest services</h2>
         <p class="sub">The services with the most alerts</p>
         @if (data.topServices.services.length > 0) {
@@ -222,5 +232,11 @@
     </div>
   </div>
 } @else if (snapshot.isLoading()) {
-  <p class="loading" role="status">Loading analytics…</p>
+  <div class="placeholder" role="status" aria-label="Loading analytics">
+    <div class="skeleton tiles-skeleton"></div>
+    <div class="grid">
+      <div class="skeleton card-skeleton"></div>
+      <div class="skeleton card-skeleton"></div>
+    </div>
+  </div>
 }

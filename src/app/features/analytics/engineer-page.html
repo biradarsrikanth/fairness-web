@@ -1,10 +1,13 @@
 <a matButton class="back" routerLink="/analytics" [queryParams]="backParams()">
-  <mat-icon>arrow_back</mat-icon>
+  <mat-icon svgIcon="back" />
   Analytics
 </a>
 
 <header class="page-header">
   <div>
+    <span class="eyebrow"
+      >Analytics / Engineer / <b>{{ data()?.engineer?.team ?? '…' }}</b></span
+    >
     <h1>{{ data()?.engineer?.name ?? 'Engineer' }}</h1>
     @if (data(); as data) {
       <p class="meta">
@@ -28,7 +31,7 @@
 
 @if (error()) {
   <div class="problem" role="alert">
-    <mat-icon aria-hidden="true">error</mat-icon>
+    <mat-icon aria-hidden="true" svgIcon="error" />
     <span>{{ error() }}</span>
     <button matButton type="button" (click)="report.reload()">Try again</button>
   </div>
@@ -68,6 +71,7 @@
 
     <div class="grid">
       <section class="panel" aria-labelledby="breakdown-heading">
+        <span class="eyebrow bracket">Burnout / parts</span>
         <h2 id="breakdown-heading">What makes up the score</h2>
         <p class="sub">
           {{ data.burnout.score.toFixed(0) }} of 100 points
@@ -118,6 +122,7 @@
 
       <app-chart-card
         heading="Time of day"
+        label="Alerts / part of day"
         subheading="Alerts by part of the day, in the team's local time"
         [empty]="totalAlerts() === 0"
         emptyText="No alerts in this period."

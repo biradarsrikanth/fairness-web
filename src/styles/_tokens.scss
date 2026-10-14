@@ -1,0 +1,171 @@
+// Editorial Telemetry: the app's colour and type tokens.
+//
+// Two modes share every token name. Paper is a warm light page framed by dark command bars; Console is dark
+// throughout. The accent is Phosphor teal, the highlight (the one thing to look at) amber, and the status
+// colours are fixed: green for good, amber for warning, red for critical. The chart palette in
+// features/analytics/charts/palette.ts mirrors these values, since a canvas can't read CSS variables.
+
+@mixin fonts {
+  --font-sans: 'Geist Variable', 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-mono:
+    'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas,
+    monospace;
+}
+
+@mixin paper {
+  color-scheme: light;
+
+  --bg: #f6f5f1;
+  --side: #efeee8;
+  --surface: #ffffff;
+  --surface-2: #faf9f6;
+  --surface-3: #eae8e1;
+  --line: #e2e0d9;
+  --line-soft: #edebe5;
+  // Field and control borders: at least 3:1 against the page, so inputs stay findable
+  --outline: #8c897f;
+  --fg: #202427;
+  --muted: #5f6367;
+  --faint: #8b8e90;
+
+  --acc: #0e7c6e;
+  --acc-ink: #0b6d61;
+  --acc-strong: #075247;
+  --on-acc: #ffffff;
+  --acc-soft: #ddefeb;
+  --acc-tint: #eef5f2;
+
+  --hl: #c27800;
+  --hl-ink: #8f5600;
+  --hl-soft: #fbefd9;
+
+  --ok: #2f7d3a;
+  --ok-bg: #e6f1e7;
+  --warn: #9a6400;
+  --warn-bg: #fbf0d9;
+  --crit: #c4342b;
+  --crit-ink: #a12a22;
+  --crit-bg: #fbe7e5;
+
+  // The command bars stay dark in both modes
+  --bar: #131615;
+  --bar-2: #1b1f1d;
+  --bar-line: #2b302e;
+
+  --shadow-pop: 0 12px 32px -12px rgb(20 24 22 / 0.22), 0 0 0 1px var(--line);
+}
+
+@mixin console {
+  color-scheme: dark;
+
+  --bg: #0e100f;
+  --side: #0b0d0c;
+  --surface: #151817;
+  --surface-2: #1a1e1c;
+  --surface-3: #232826;
+  --line: #262b29;
+  --line-soft: #1d2120;
+  --outline: #5f6562;
+  --fg: #e7e7e3;
+  --muted: #9da19e;
+  --faint: #6e7370;
+
+  --acc: #3fd9c1;
+  --acc-ink: #5fe3ce;
+  --acc-strong: #a6f1e5;
+  --on-acc: #03201b;
+  --acc-soft: #12332e;
+  --acc-tint: #111f1c;
+
+  --hl: #f2b33d;
+  --hl-ink: #f5c46a;
+  --hl-soft: #33270f;
+
+  --ok: #7bd88f;
+  --ok-bg: #16291b;
+  --warn: #f2b33d;
+  --warn-bg: #2e2410;
+  --crit: #ff6b5e;
+  --crit-ink: #ff8e84;
+  --crit-bg: #351816;
+
+  --bar: #080909;
+  --bar-2: #0e1110;
+  --bar-line: #1f2321;
+
+  --shadow-pop: 0 16px 40px -12px rgb(0 0 0 / 0.6), 0 0 0 1px var(--line);
+}
+
+// Tokens that read the same in both modes
+@mixin shared {
+  --bar-fg: #ecebe7;
+  --bar-muted: #9a9e9b;
+  --bar-acc: #3fd9c1;
+  --bar-hl: #f2b33d;
+  --bar-ok: #7bd88f;
+  --bar-crit: #ff7a70;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+
+  // Older names still used by a few components
+  --chart-surface: var(--surface);
+  --status-good: var(--ok);
+  --status-warning: var(--warn);
+  --status-critical: var(--crit);
+  --delta-good: var(--ok);
+  --delta-bad: var(--crit);
+}
+
+// Angular Material's system variables, pointed at the tokens above
+@mixin material-system {
+  --mat-sys-background: var(--bg);
+  --mat-sys-on-background: var(--fg);
+  --mat-sys-surface: var(--bg);
+  --mat-sys-surface-dim: var(--side);
+  --mat-sys-surface-bright: var(--surface);
+  --mat-sys-surface-container-lowest: var(--surface);
+  --mat-sys-surface-container-low: var(--surface);
+  --mat-sys-surface-container: var(--surface-2);
+  --mat-sys-surface-container-high: var(--surface);
+  --mat-sys-surface-container-highest: var(--surface-3);
+  --mat-sys-surface-variant: var(--side);
+  --mat-sys-on-surface: var(--fg);
+  --mat-sys-on-surface-variant: var(--muted);
+  --mat-sys-outline: var(--outline);
+  --mat-sys-outline-variant: var(--line);
+  --mat-sys-primary: var(--acc);
+  --mat-sys-on-primary: var(--on-acc);
+  --mat-sys-primary-container: var(--acc-soft);
+  --mat-sys-on-primary-container: var(--acc-ink);
+  --mat-sys-secondary: var(--muted);
+  --mat-sys-on-secondary: var(--surface);
+  --mat-sys-secondary-container: var(--acc-soft);
+  --mat-sys-on-secondary-container: var(--acc-ink);
+  --mat-sys-tertiary: var(--hl);
+  --mat-sys-on-tertiary: var(--bar);
+  --mat-sys-tertiary-container: var(--hl-soft);
+  --mat-sys-on-tertiary-container: var(--hl-ink);
+  --mat-sys-error: var(--crit);
+  --mat-sys-on-error: #ffffff;
+  --mat-sys-error-container: var(--crit-bg);
+  --mat-sys-on-error-container: var(--crit-ink);
+  --mat-sys-inverse-surface: var(--bar);
+  --mat-sys-inverse-on-surface: var(--bar-fg);
+  --mat-sys-inverse-primary: var(--bar-acc);
+  --mat-sys-surface-tint: var(--acc);
+  --mat-sys-scrim: #000000;
+  --mat-sys-shadow: #000000;
+
+  --mat-sys-corner-extra-small: 3px;
+  --mat-sys-corner-small: 4px;
+  --mat-sys-corner-medium: 6px;
+  --mat-sys-corner-large: 8px;
+  --mat-sys-corner-extra-large: 10px;
+
+  --mat-sys-level1: 0 1px 2px rgb(0 0 0 / 0.06);
+  --mat-sys-level2: var(--shadow-pop);
+  --mat-sys-level3: var(--shadow-pop);
+}

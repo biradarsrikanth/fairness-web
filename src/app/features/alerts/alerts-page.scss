@@ -1,0 +1,51 @@
+// One line per alert: long titles and services end in an ellipsis and show in full on hover
+.title-cell {
+  max-width: 280px;
+
+  a {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--acc-ink);
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+}
+
+.time {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mat-column-engineerName {
+  white-space: nowrap;
+}
+
+.mat-column-team,
+.mat-column-serviceName {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Tighter cells, so all columns fit a laptop screen without scrolling sideways
+.mat-mdc-cell,
+.mat-mdc-header-cell {
+  padding: 0 10px;
+}
+
+// The title names the service already; the column returns on wide screens
+@media (max-width: 1679.98px) {
+  .mat-column-serviceName {
+    display: none;
+  }
+}

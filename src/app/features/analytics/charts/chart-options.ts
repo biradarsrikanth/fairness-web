@@ -8,23 +8,15 @@ import {
 } from '../../../api/models';
 import { formatDayMonth, formatMonth, formatPct } from '../../../shared/format';
 import { dayIn } from '../analytics-filter';
-import {
-  CHART_SURFACE,
-  EMPTY_CELL,
-  FONT_FAMILY,
-  INK,
-  SEQUENTIAL,
-  SERIES_1,
-  SEVERITY_COLORS,
-} from './palette';
+import { ChartPalette, FONT_FAMILY, MONO_FAMILY, PAPER } from './palette';
 
 /*
- * ECharts options for the analytics charts. Each builder is a pure function of the gateway's data, so the
- * charts are tested without drawing them. Every chart also has a table view on the page; tooltips add
- * detail but never hold the only copy of a value.
+ * ECharts options for the analytics charts. Each builder is a pure function of the gateway's data and the
+ * palette of the current colour mode, so the charts are tested without drawing them. Every chart also has
+ * a table view on the page; tooltips add detail but never hold the only copy of a value.
  */
 
-export type SeverityKey = keyof typeof SEVERITY_COLORS;
+export type SeverityKey = keyof ChartPalette['severity'];
 
 export const SEVERITIES: readonly { key: SeverityKey; label: string }[] = [
   { key: 'p1', label: 'P1' },
@@ -53,6 +45,9 @@ export const GINI_BANDS = [
   { from: 0.6, label: 'Critical' },
 ];
 
+/** The load-share chart draws this many engineers; the rest share one "others" bar. */
+export const LOAD_SHARE_LIMIT = 12;
+
 /** A period by its first day: 14 Sep for days and weeks, Sep 2026 for months. */
 export function periodLabel(start: string, granularity: string): string {
   return granularity === 'month' ? formatMonth(start) : formatDayMonth(start);
@@ -67,31 +62,40 @@ export function escapeHtml(text: string): string {
     .replaceAll("'", '&#39;');
 }
 
-const textStyle = { fontFamily: FONT_FAMILY, color: INK.secondary, fontSize: 12 };
+// ---------- shared pieces, per palette ----------
 
-const tooltip = {
-  backgroundColor: '#ffffff',
-  borderColor: INK.grid,
-  borderWidth: 1,
-  padding: [8, 12],
-  textStyle: { fontFamily: FONT_FAMILY, color: INK.primary, fontSize: 12 },
-  extraCssText: 'box-shadow: 0 2px 8px rgba(11, 11, 11, 0.12); border-radius: 8px;',
-};
-
-const categoryAxis = {
-  type: 'category',
-  axisLine: { lineStyle: { color: INK.axis } },
-  axisTick: { show: false },
-  axisLabel: { color: INK.muted, fontFamily: FONT_FAMILY, fontSize: 11 },
-};
-
-const valueAxis = {
-  type: 'value',
-  axisLine: { show: false },
-  axisTick: { show: false },
-  axisLabel: { color: INK.muted, fontFamily: FONT_FAMILY, fontSize: 11 },
-  splitLine: { lineStyle: { color: INK.grid, width: 1, type: 'solid' } },
-};
+function base(p: ChartPalette) {
+  const textStyle = { fontFamily: FONT_FAMILY, color: p.ink.secondary, fontSize: 12 };
+  const axisLabel = { color: p.ink.muted, fontFamily: MONO_FAMILY, fontSize: 10.5 };
+  return {
+    textStyle,
+    axisLabel,
+    tooltip: {
+      backgroundColor: p.tooltip.background,
+      borderColor: p.tooltip.border,
+      borderWidth: 1,
+      padding: [8, 12],
+      textStyle: { fontFamily: FONT_FAMILY, color: p.ink.primary, fontSize: 12 },
+      extraCssText: `box-shadow: ${p.tooltip.shadow}; border-radius: 4px;`,
+    },
+    categoryAxis: {
+      type: 'category',
+      axisLine: { lineStyle: { color: p.ink.axis } },
+      axisTick: { show: false },
+      axisLabel,
+    },
+    valueAxis: {
+      type: 'value',
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel,
+      splitLine: { lineStyle: { color: p.ink.grid, width: 1, type: 'solid' } },
+    },
+    shadowPointer: { type: 'shadow', shadowStyle: { color: p.hover } },
+    heading: (text: string) =>
+      `<div style="margin-bottom:4px;color:${p.ink.secondary};font-family:${MONO_FAMILY};font-size:11px;letter-spacing:0.04em">${escapeHtml(text)}</div>`,
+  };
+}
 
 function row(marker: string, label: string, value: string): string {
   return (
@@ -101,11 +105,7 @@ function row(marker: string, label: string, value: string): string {
 }
 
 function swatch(color: string): string {
-  return `<span style="display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:${color}"></span>`;
-}
-
-function heading(text: string): string {
-  return `<div style="margin-bottom:4px;color:${INK.secondary}">${escapeHtml(text)}</div>`;
+  return `<span style="display:inline-block;width:8px;height:8px;border-radius:1px;margin-right:6px;background:${color}"></span>`;
 }
 
 /** Severities that occur in the series; the others stay out of the legend. Colors never move. */
@@ -114,57 +114,59 @@ export function severitiesIn(series: TimeSeries): typeof SEVERITIES {
 }
 
 /** Alerts per period, stacked by severity (P1 at the bottom). */
-export function alertsOverTimeOption(series: TimeSeries): EChartsCoreOption {
+export function alertsOverTimeOption(
+  series: TimeSeries,
+  p: ChartPalette = PAPER,
+): EChartsCoreOption {
+  const b = base(p);
   const present = severitiesIn(series);
-  const labels = series.points.map((p) => periodLabel(p.start, series.granularity));
+  const labels = series.points.map((point) => periodLabel(point.start, series.granularity));
   // Only the top segment of each stack gets rounded corners
-  const topOf = series.points.map((p) => {
+  const topOf = series.points.map((point) => {
     for (let i = present.length - 1; i >= 0; i--) {
-      if (p.bySeverity[present[i].key] > 0) return present[i].key;
+      if (point.bySeverity[present[i].key] > 0) return present[i].key;
     }
     return null;
   });
   return {
-    textStyle,
+    textStyle: b.textStyle,
     aria: { enabled: true },
     grid: { left: 8, right: 16, top: 40, bottom: 8, containLabel: true },
     legend: {
       show: present.length > 1,
       top: 0,
       left: 0,
-      icon: 'roundRect',
-      itemWidth: 10,
-      itemHeight: 10,
-      textStyle,
+      icon: 'rect',
+      itemWidth: 9,
+      itemHeight: 9,
+      textStyle: { ...b.textStyle, fontFamily: MONO_FAMILY, fontSize: 11 },
     },
     tooltip: {
-      ...tooltip,
+      ...b.tooltip,
       trigger: 'axis',
-      axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(11, 11, 11, 0.04)' } },
+      axisPointer: b.shadowPointer,
       formatter: (params: { dataIndex: number }[]) => {
         const index = params[0]?.dataIndex ?? 0;
         const point = series.points[index];
         const rows = present
           .filter((s) => point.bySeverity[s.key] > 0)
-          .map((s) =>
-            row(swatch(SEVERITY_COLORS[s.key]), s.label, String(point.bySeverity[s.key])),
-          );
-        return heading(labels[index]) + rows.join('') + row('', 'Total', String(point.total));
+          .map((s) => row(swatch(p.severity[s.key]), s.label, String(point.bySeverity[s.key])));
+        return b.heading(labels[index]) + rows.join('') + row('', 'Total', String(point.total));
       },
     },
-    xAxis: { ...categoryAxis, data: labels },
-    yAxis: { ...valueAxis, minInterval: 1 },
+    xAxis: { ...b.categoryAxis, data: labels },
+    yAxis: { ...b.valueAxis, minInterval: 1 },
     series: present.map((s) => ({
       name: s.label,
       type: 'bar',
       stack: 'alerts',
       barMaxWidth: 28,
-      color: SEVERITY_COLORS[s.key],
+      color: p.severity[s.key],
       emphasis: { focus: 'series' },
-      itemStyle: { borderColor: CHART_SURFACE, borderWidth: 1 },
-      data: series.points.map((p, i) => ({
-        value: p.bySeverity[s.key],
-        itemStyle: topOf[i] === s.key ? { borderRadius: [4, 4, 0, 0] } : undefined,
+      itemStyle: { borderColor: p.surface, borderWidth: 1 },
+      data: series.points.map((point, i) => ({
+        value: point.bySeverity[s.key],
+        itemStyle: topOf[i] === s.key ? { borderRadius: [2, 2, 0, 0] } : undefined,
       })),
     })),
   };
@@ -184,17 +186,19 @@ export function giniTrendOption(
   periods: readonly TrendPeriod[],
   granularity: string,
   timeZone: string,
+  p: ChartPalette = PAPER,
 ): EChartsCoreOption {
-  const labels = periods.map((p) => trendPeriodLabel(p, granularity, timeZone));
-  const highest = Math.max(0, ...periods.map((p) => p.gini));
+  const b = base(p);
+  const labels = periods.map((period) => trendPeriodLabel(period, granularity, timeZone));
+  const highest = Math.max(0, ...periods.map((period) => period.gini));
   return {
-    textStyle,
+    textStyle: b.textStyle,
     aria: { enabled: true },
     grid: { left: 8, right: 72, top: 16, bottom: 8, containLabel: true },
     tooltip: {
-      ...tooltip,
+      ...b.tooltip,
       trigger: 'axis',
-      axisPointer: { type: 'line', lineStyle: { color: INK.axis } },
+      axisPointer: { type: 'line', lineStyle: { color: p.ink.axis } },
       formatter: (params: { dataIndex: number }[]) => {
         const period = periods[params[0]?.dataIndex ?? 0];
         const burnout =
@@ -202,42 +206,43 @@ export function giniTrendOption(
             ? '–'
             : period.averageBurnout.toFixed(0);
         return (
-          heading(labels[params[0]?.dataIndex ?? 0]) +
-          row(swatch(SERIES_1), 'Gini', period.gini.toFixed(2)) +
+          b.heading(labels[params[0]?.dataIndex ?? 0]) +
+          row(swatch(p.series1), 'Gini', period.gini.toFixed(2)) +
           row('', 'Alerts', String(period.alertCount)) +
           row('', 'Average burnout', burnout) +
           row('', 'High burnout risk', String(period.highRiskCount)) +
           (period.confidence === 'LOW'
-            ? `<div style="margin-top:4px;color:${INK.secondary}">Few alerts or engineers: indicative only</div>`
+            ? `<div style="margin-top:4px;color:${p.ink.secondary}">Few alerts or engineers: indicative only</div>`
             : '')
         );
       },
     },
-    xAxis: { ...categoryAxis, boundaryGap: false, data: labels },
+    xAxis: { ...b.categoryAxis, boundaryGap: false, data: labels },
     yAxis: {
-      ...valueAxis,
+      ...b.valueAxis,
       min: 0,
       max: Math.min(1, Math.max(0.7, Math.ceil((highest + 0.05) * 10) / 10)),
       interval: 0.2,
-      axisLabel: { ...valueAxis.axisLabel, formatter: (v: number) => v.toFixed(1) },
+      axisLabel: { ...b.axisLabel, formatter: (v: number) => v.toFixed(1) },
     },
     series: [
       {
         name: 'Gini',
         type: 'line',
-        color: SERIES_1,
+        color: p.series1,
         lineStyle: { width: 2 },
         symbolSize: 8,
-        itemStyle: { borderColor: CHART_SURFACE, borderWidth: 2 },
-        data: periods.map((p) => ({
-          value: p.gini,
-          symbol: p.confidence === 'LOW' ? 'emptyCircle' : 'circle',
+        itemStyle: { borderColor: p.surface, borderWidth: 2 },
+        areaStyle: { color: p.series1, opacity: 0.07 },
+        data: periods.map((period) => ({
+          value: period.gini,
+          symbol: period.confidence === 'LOW' ? 'emptyCircle' : 'circle',
         })),
         markLine: {
           silent: true,
           symbol: 'none',
-          lineStyle: { color: INK.axis, type: 'solid', width: 1 },
-          label: { position: 'end', color: INK.muted, fontFamily: FONT_FAMILY, fontSize: 11 },
+          lineStyle: { color: p.ink.axis, type: 'dashed', width: 1 },
+          label: { position: 'end', color: p.ink.muted, fontFamily: MONO_FAMILY, fontSize: 10.5 },
           data: GINI_BANDS.map((band) => ({ yAxis: band.from, label: { formatter: band.label } })),
         },
       },
@@ -245,56 +250,139 @@ export function giniTrendOption(
   };
 }
 
-/** Each engineer's share of the load, largest first, against an even split. */
-export function loadShareOption(engineers: readonly EngineerLoad[]): EChartsCoreOption {
+interface LoadRow {
+  readonly name: string;
+  readonly sharePct: number;
+  readonly alertCount: number;
+  readonly oncallHours: number | null;
+  readonly engineerId?: number;
+  /** For the "others" bar: how many engineers it stands for */
+  readonly others?: number;
+}
+
+/** The engineers the chart draws, largest share first: the top ones, then everyone else as one row. */
+export function loadShareRows(
+  engineers: readonly EngineerLoad[],
+  limit = LOAD_SHARE_LIMIT,
+): LoadRow[] {
   const sorted = [...engineers].sort((a, b) => b.sharePct - a.sharePct);
+  const top: LoadRow[] = sorted.slice(0, limit).map((e) => ({
+    name: e.name,
+    sharePct: e.sharePct,
+    alertCount: e.alertCount,
+    oncallHours: e.oncallHours ?? null,
+    engineerId: e.engineerId,
+  }));
+  const rest = sorted.slice(limit);
+  // One engineer left over is drawn as themselves, not as "1 other"
+  if (rest.length <= 1) {
+    return sorted.map((e) => ({
+      name: e.name,
+      sharePct: e.sharePct,
+      alertCount: e.alertCount,
+      oncallHours: e.oncallHours ?? null,
+      engineerId: e.engineerId,
+    }));
+  }
+  const share = rest.reduce((sum, e) => sum + e.sharePct, 0);
+  return [
+    ...top,
+    {
+      name: `${rest.length} others`,
+      sharePct: Math.round(share * 10) / 10,
+      alertCount: rest.reduce((sum, e) => sum + e.alertCount, 0),
+      oncallHours: null,
+      others: rest.length,
+    },
+  ];
+}
+
+/**
+ * Each engineer's share of the load, largest first, against an even split. Anyone carrying more than twice
+ * an even share is drawn in the highlight colour; past the limit, the rest share one neutral bar.
+ */
+export function loadShareOption(
+  engineers: readonly EngineerLoad[],
+  p: ChartPalette = PAPER,
+  limit = LOAD_SHARE_LIMIT,
+): EChartsCoreOption {
+  const b = base(p);
+  const rows = loadShareRows(engineers, limit);
   const even = engineers.length > 0 ? 100 / engineers.length : 0;
+  const color = (r: LoadRow) =>
+    r.others !== undefined
+      ? p.ink.axis
+      : engineers.length > 2 && r.sharePct > even * 2
+        ? p.highlight
+        : null;
   return {
-    textStyle,
+    textStyle: b.textStyle,
     aria: { enabled: true },
-    grid: { left: 8, right: 56, top: 8, bottom: 8, containLabel: true },
+    // Room at the top for the even-share label
+    grid: { left: 8, right: 64, top: 28, bottom: 8, containLabel: true },
     tooltip: {
-      ...tooltip,
+      ...b.tooltip,
       trigger: 'axis',
-      axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(11, 11, 11, 0.04)' } },
+      axisPointer: b.shadowPointer,
       formatter: (params: { dataIndex: number }[]) => {
-        const engineer = sorted[params[0]?.dataIndex ?? 0];
+        const r = rows[params[0]?.dataIndex ?? 0];
         return (
-          heading(engineer.name) +
-          row(swatch(SERIES_1), 'Share of load', formatPct(engineer.sharePct)) +
-          row('', 'Alerts', String(engineer.alertCount)) +
-          (engineer.oncallHours === null || engineer.oncallHours === undefined
+          b.heading(r.others !== undefined ? `${r.others} other engineers together` : r.name) +
+          row(swatch(color(r) ?? p.series1), 'Share of load', formatPct(r.sharePct)) +
+          row('', 'Alerts', String(r.alertCount)) +
+          (r.oncallHours === null
             ? ''
-            : row('', 'On-call hours', String(Math.round(engineer.oncallHours))))
+            : row('', 'On-call hours', String(Math.round(r.oncallHours))))
         );
       },
     },
     xAxis: {
-      ...valueAxis,
+      ...b.valueAxis,
       min: 0,
-      axisLabel: { ...valueAxis.axisLabel, formatter: (v: number) => `${v}%` },
+      axisLabel: { ...b.axisLabel, formatter: (v: number) => `${v}%` },
     },
-    yAxis: { ...categoryAxis, inverse: true, data: sorted.map((e) => e.name) },
+    yAxis: {
+      ...b.categoryAxis,
+      inverse: true,
+      data: rows.map((r) => r.name),
+      axisLabel: { ...b.axisLabel, fontFamily: FONT_FAMILY, fontSize: 12, color: p.ink.secondary },
+    },
     series: [
       {
         name: 'Share of load',
         type: 'bar',
-        color: SERIES_1,
-        barMaxWidth: 16,
-        itemStyle: { borderRadius: [0, 4, 4, 0] },
-        data: sorted.map((e) => ({ value: e.sharePct, engineerId: e.engineerId })),
+        color: p.series1,
+        barMaxWidth: 14,
+        itemStyle: { borderRadius: [0, 2, 2, 0] },
+        label: {
+          show: true,
+          position: 'right',
+          formatter: (params: { value: number }) => formatPct(params.value),
+          color: p.ink.secondary,
+          fontFamily: MONO_FAMILY,
+          fontSize: 10.5,
+        },
+        data: rows.map((r) => {
+          const fill = color(r);
+          return {
+            value: r.sharePct,
+            ...(r.engineerId !== undefined && { engineerId: r.engineerId }),
+            ...(fill && { itemStyle: { color: fill } }),
+          };
+        }),
         markLine:
           engineers.length > 1
             ? {
                 silent: true,
                 symbol: 'none',
-                lineStyle: { color: INK.secondary, type: 'solid', width: 1 },
+                lineStyle: { color: p.ink.secondary, type: 'dashed', width: 1 },
+                // The category axis runs top to bottom, so the line starts at the top
                 label: {
-                  position: 'end',
+                  position: 'start',
                   formatter: 'Even share',
-                  color: INK.secondary,
-                  fontFamily: FONT_FAMILY,
-                  fontSize: 11,
+                  color: p.ink.secondary,
+                  fontFamily: MONO_FAMILY,
+                  fontSize: 10.5,
                 },
                 data: [{ xAxis: Math.round(even * 10) / 10 }],
               }
@@ -304,36 +392,43 @@ export function loadShareOption(engineers: readonly EngineerLoad[]): EChartsCore
   };
 }
 
-/** Rows the load-share chart needs: 28px per engineer plus the axis. */
-export function loadShareHeight(count: number): number {
-  return Math.max(160, count * 28 + 48);
+/** Height the load-share chart needs: 28px per drawn row plus the axis. */
+export function loadShareHeight(count: number, limit = LOAD_SHARE_LIMIT): number {
+  const drawn = count > limit + 1 ? limit + 1 : count;
+  return Math.max(160, drawn * 28 + 48);
 }
 
 function hourLabel(hour: number): string {
   return `${String(hour).padStart(2, '0')}:00`;
 }
 
-/** Alerts by weekday (rows, Monday on top) and hour (columns). Empty cells in neutral gray. */
-export function heatmapOption(heatmap: Heatmap): EChartsCoreOption {
+/** Alerts by weekday (rows, Monday on top) and hour (columns). Empty cells in a neutral tone. */
+export function heatmapOption(heatmap: Heatmap, p: ChartPalette = PAPER): EChartsCoreOption {
+  const b = base(p);
   const hours = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0'));
   return {
-    textStyle,
+    textStyle: b.textStyle,
     aria: { enabled: true },
     grid: { left: 8, right: 8, top: 8, bottom: 48, containLabel: true },
     tooltip: {
-      ...tooltip,
+      ...b.tooltip,
       trigger: 'item',
       formatter: (params: { value: [number, number, number] }) => {
         const [hour, day, count] = params.value;
         return (
-          heading(`${WEEKDAYS[day]} ${hourLabel(hour)}–${hourLabel((hour + 1) % 24)}`) +
+          b.heading(`${WEEKDAYS[day]} ${hourLabel(hour)}–${hourLabel((hour + 1) % 24)}`) +
           row('', 'Alerts', String(count))
         );
       },
     },
-    xAxis: { ...categoryAxis, data: hours, axisLine: { show: false }, splitArea: { show: false } },
+    xAxis: {
+      ...b.categoryAxis,
+      data: hours,
+      axisLine: { show: false },
+      splitArea: { show: false },
+    },
     yAxis: {
-      ...categoryAxis,
+      ...b.categoryAxis,
       data: WEEKDAYS,
       inverse: true,
       axisLine: { show: false },
@@ -347,19 +442,19 @@ export function heatmapOption(heatmap: Heatmap): EChartsCoreOption {
       orient: 'horizontal',
       left: 'center',
       bottom: 0,
-      itemWidth: 12,
+      itemWidth: 10,
       itemHeight: 160,
       text: [String(Math.max(1, heatmap.max)), '1'],
-      textStyle,
-      inRange: { color: SEQUENTIAL },
-      outOfRange: { color: EMPTY_CELL },
+      textStyle: { ...b.textStyle, fontFamily: MONO_FAMILY, fontSize: 10.5 },
+      inRange: { color: [...p.sequential] },
+      outOfRange: { color: p.emptyCell },
     },
     series: [
       {
         name: 'Alerts',
         type: 'heatmap',
-        itemStyle: { borderColor: CHART_SURFACE, borderWidth: 2, borderRadius: 3 },
-        emphasis: { itemStyle: { borderColor: INK.primary, borderWidth: 1 } },
+        itemStyle: { borderColor: p.surface, borderWidth: 2, borderRadius: 1 },
+        emphasis: { itemStyle: { borderColor: p.highlight, borderWidth: 1.5 } },
         data: heatmap.cells.map((c) => [c.hour, c.dayOfWeek - 1, c.count]),
       },
     ],
@@ -367,32 +462,39 @@ export function heatmapOption(heatmap: Heatmap): EChartsCoreOption {
 }
 
 /** One engineer's alerts by part of the day. */
-export function timeOfDayOption(counts: TimeOfDayCounts): EChartsCoreOption {
+export function timeOfDayOption(
+  counts: TimeOfDayCounts,
+  p: ChartPalette = PAPER,
+): EChartsCoreOption {
+  const b = base(p);
   return {
-    textStyle,
+    textStyle: b.textStyle,
     aria: { enabled: true },
     grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
     tooltip: {
-      ...tooltip,
+      ...b.tooltip,
       trigger: 'axis',
-      axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(11, 11, 11, 0.04)' } },
+      axisPointer: b.shadowPointer,
       formatter: (params: { dataIndex: number }[]) => {
         const part = DAY_PARTS[params[0]?.dataIndex ?? 0];
         return (
-          heading(`${part.label}, ${part.hours}`) + row('', 'Alerts', String(counts[part.key]))
+          b.heading(`${part.label}, ${part.hours}`) + row('', 'Alerts', String(counts[part.key]))
         );
       },
     },
-    xAxis: { ...categoryAxis, data: DAY_PARTS.map((p) => p.label) },
-    yAxis: { ...valueAxis, minInterval: 1 },
+    xAxis: { ...b.categoryAxis, data: DAY_PARTS.map((part) => part.label) },
+    yAxis: { ...b.valueAxis, minInterval: 1 },
     series: [
       {
         name: 'Alerts',
         type: 'bar',
-        color: SERIES_1,
+        // Night pages are the costly ones: that bar in the highlight
+        data: DAY_PARTS.map((part) => ({
+          value: counts[part.key],
+          itemStyle: { color: part.key === 'night' ? p.highlight : p.series1 },
+        })),
         barMaxWidth: 40,
-        itemStyle: { borderRadius: [4, 4, 0, 0] },
-        data: DAY_PARTS.map((p) => counts[p.key]),
+        itemStyle: { borderRadius: [2, 2, 0, 0] },
       },
     ],
   };

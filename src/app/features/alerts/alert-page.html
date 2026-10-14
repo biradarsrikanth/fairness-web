@@ -1,17 +1,20 @@
 <div class="page">
   <button matButton type="button" class="back" (click)="back()">
-    <mat-icon>arrow_back</mat-icon>
+    <mat-icon svgIcon="back" />
     Alerts
   </button>
 
   @if (error()) {
     <div class="page-problem" role="alert">
-      <mat-icon aria-hidden="true">error</mat-icon>
+      <mat-icon aria-hidden="true" svgIcon="error" />
       <span>{{ error() }}</span>
     </div>
   } @else if (alert.hasValue() && alert.value(); as alert) {
     <div class="page-bar">
       <div>
+        <span class="eyebrow"
+          >Monitor / Alerts / <b>#{{ alert.id }}</b></span
+        >
         <h1>{{ alert.title ?? 'Untitled alert' }}</h1>
         <p class="muted subtitle">
           {{ alert.serviceName ?? 'No service' }}
@@ -22,7 +25,7 @@
       </div>
       @if (canDelete()) {
         <button matButton="outlined" type="button" [disabled]="deleting()" (click)="remove()">
-          <mat-icon>delete</mat-icon>
+          <mat-icon svgIcon="delete" />
           Delete
         </button>
       }
@@ -32,13 +35,25 @@
       <dl class="facts">
         <div>
           <dt>Status</dt>
-          <dd>{{ alert.status ? humanize(alert.status) : '–' }}</dd>
+          <dd>
+            @if (alert.status) {
+              <span class="status-dot" [class]="statusClass(alert.status)">{{
+                humanize(alert.status)
+              }}</span>
+            } @else {
+              –
+            }
+          </dd>
         </div>
         <div>
           <dt>Severity</dt>
           <dd>
-            {{ alert.severity ?? '–'
-            }}{{ alert.urgency ? ' · ' + humanize(alert.urgency) + ' urgency' : '' }}
+            @if (alert.severity) {
+              <span class="tag" [class]="severityClass(alert.severity)">{{ alert.severity }}</span>
+            } @else {
+              –
+            }
+            {{ alert.urgency ? ' · ' + humanize(alert.urgency) + ' urgency' : '' }}
           </dd>
         </div>
         <div>

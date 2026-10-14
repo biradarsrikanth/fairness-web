@@ -21,10 +21,13 @@ import { TeamDialog, TeamDialogData } from './team-dialog';
   template: `
     <div class="page">
       <div class="page-bar">
-        <h1>Teams</h1>
+        <div>
+          <span class="eyebrow">People / <b>Teams</b></span>
+          <h1>Teams</h1>
+        </div>
         @if (isAdmin()) {
           <button matButton="filled" type="button" (click)="edit()">
-            <mat-icon>group_add</mat-icon>
+            <mat-icon svgIcon="group-add" />
             Add team
           </button>
         }
@@ -32,7 +35,7 @@ import { TeamDialog, TeamDialogData } from './team-dialog';
 
       @if (error()) {
         <div class="page-problem" role="alert">
-          <mat-icon aria-hidden="true">error</mat-icon>
+          <mat-icon aria-hidden="true" svgIcon="error" />
           <span>Couldn't load teams. {{ error() }}</span>
           <button matButton type="button" (click)="teams.reload()">Try again</button>
         </div>

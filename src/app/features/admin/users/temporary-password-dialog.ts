@@ -23,7 +23,7 @@ export interface TemporaryPasswordData {
       <div class="secret">
         <code>{{ data.password }}</code>
         <button matButton type="button" (click)="copy()">
-          <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
+          <mat-icon [svgIcon]="copied() ? 'check' : 'copy'" />
           {{ copied() ? 'Copied' : 'Copy' }}
         </button>
       </div>

@@ -1,14 +1,15 @@
 import { Component, computed, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { IconName } from '../../core/icons/icons';
 
 interface RiskLook {
   readonly label: string;
-  readonly icon: string;
+  readonly icon: IconName;
   readonly tone: 'good' | 'warning' | 'critical' | 'unknown';
 }
 
 const LOOKS: Record<string, RiskLook> = {
-  LOW: { label: 'Low', icon: 'check_circle', tone: 'good' },
+  LOW: { label: 'Low', icon: 'check-circle', tone: 'good' },
   MEDIUM: { label: 'Medium', icon: 'error', tone: 'warning' },
   HIGH: { label: 'High', icon: 'warning', tone: 'critical' },
 };
@@ -18,7 +19,7 @@ const LOOKS: Record<string, RiskLook> = {
   selector: 'app-risk-badge',
   imports: [MatIconModule],
   template: `
-    <mat-icon aria-hidden="true">{{ look().icon }}</mat-icon>
+    <mat-icon aria-hidden="true" [svgIcon]="look().icon" />
     <span>{{ look().label }}<span class="visually-hidden"> burnout risk</span></span>
   `,
   host: { '[class]': '"badge " + look().tone' },
@@ -26,38 +27,33 @@ const LOOKS: Record<string, RiskLook> = {
     :host {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 2px 8px 2px 4px;
-      border-radius: 999px;
-      font: var(--mat-sys-label-medium);
-      color: var(--mat-sys-on-surface);
+      gap: 5px;
+      padding: 2px 7px 2px 5px;
+      border-radius: var(--radius-xs);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--tone, var(--muted));
+      background: var(--tone-bg, var(--surface-3));
       white-space: nowrap;
     }
     mat-icon {
-      width: 16px;
-      height: 16px;
-      font-size: 16px;
+      width: 14px;
+      height: 14px;
     }
     :host(.good) {
-      background: color-mix(in srgb, var(--status-good) 12%, transparent);
-    }
-    :host(.good) mat-icon {
-      color: var(--status-good);
+      --tone: var(--ok);
+      --tone-bg: var(--ok-bg);
     }
     :host(.warning) {
-      background: color-mix(in srgb, var(--status-warning) 18%, transparent);
-    }
-    :host(.warning) mat-icon {
-      color: #a36d00;
+      --tone: var(--warn);
+      --tone-bg: var(--warn-bg);
     }
     :host(.critical) {
-      background: color-mix(in srgb, var(--status-critical) 12%, transparent);
-    }
-    :host(.critical) mat-icon {
-      color: var(--status-critical);
-    }
-    :host(.unknown) {
-      background: var(--mat-sys-surface-container-high);
+      --tone: var(--crit-ink);
+      --tone-bg: var(--crit-bg);
     }
   `,
 })

@@ -37,8 +37,9 @@ For the whole app with a throwaway database holding real incident data, run `doc
 folder instead (http://localhost:8088).
 
 - `nginx/default.conf.template`: routes, `/healthz` for the container healthcheck, caching (hashed files for a
-  year, `index.html` never, so a release shows on the next load), and 120 s for reports to build.
-- `nginx/security-headers.conf`: Content-Security-Policy (scripts from this origin only, Google Fonts for fonts),
+  year; `index.html`, `theme-boot.js` and the favicon checked on every load, so a release shows at once), gzip
+  for the app's files and the gateway's JSON, and 120 s for reports to build.
+- `nginx/security-headers.conf`: Content-Security-Policy (scripts, styles and fonts from this origin only),
   HSTS when the request came over HTTPS (TLS ends in front of Nginx and sends `X-Forwarded-Proto`),
   `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`.
 - The production build turns critical-CSS inlining off (`angular.json`): its loader is an inline script, which
@@ -101,11 +102,30 @@ commit `openapi/gateway.json` with the regenerated client.
 ```
 src/app/
   api/        generated client (npm run api)
-  core/       auth (service, interceptor, guards), http (errors, loading), layout (shell, navigation)
+  core/       auth (service, interceptor, guards), http (errors, loading, telemetry), layout (shell, jump menu,
+              navigation), theme (Paper and Console), icons (the app's own SVG icons)
   features/   pages, one folder each (auth, analytics, reports, alerts, engineers, teams, oncall,
               admin/{users,sync,audit})
   shared/     reusable pieces (formatting, form helpers, list state, dialogs, the risk badge, date range field)
 ```
+
+## Look and feel
+
+Editorial Telemetry: serif page titles and readable sans text (Editorial), inside a dark command bar and status
+bar with monospace labels, figures and IDs (Telemetry). Phosphor teal is the accent, amber the highlight for the
+one value to look at, and green, amber and red only ever mean good, warning and critical.
+
+- `src/styles/_tokens.scss` holds every colour for both modes and points Angular Material's system variables at
+  them; `src/styles.scss` sets component shapes and shared classes. Charts can't read CSS variables, so
+  `features/analytics/charts/palette.ts` mirrors the values.
+- Two modes: Paper (light pages, dark bars) and Console (dark throughout). The system setting decides until the
+  user picks one (the header button, or Ctrl K); the choice is kept in localStorage and shared across tabs.
+  `public/theme-boot.js` applies it before the first paint.
+- Fonts (Geist, Newsreader, JetBrains Mono) come from npm (`@fontsource-variable/*`) and icons from
+  `core/icons/icons.ts`, so nothing loads from another site.
+- The header ticker and the status bar make no requests of their own beyond one summary every 15 minutes
+  (and the sync status, for admins), and only while the tab is visible; API latency and connection state are
+  measured from the requests the app makes anyway (`core/http/telemetry.ts`).
 
 ## Pages
 

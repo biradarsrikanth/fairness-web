@@ -30,7 +30,12 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.scss"]
+            "styles": [
+              "@fontsource-variable/geist/index.css",
+              "@fontsource-variable/newsreader/index.css",
+              "@fontsource-variable/jetbrains-mono/index.css",
+              "src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
@@ -42,7 +47,7 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
+                  "maximumWarning": "6kB",
                   "maximumError": "8kB"
                 }
               ],
@@ -77,7 +82,10 @@
           }
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "providersFile": "src/test-providers.ts"
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",

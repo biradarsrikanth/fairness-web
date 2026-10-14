@@ -1,11 +1,22 @@
 <main class="auth-page">
-  <mat-card appearance="outlined" class="auth-card">
-    <mat-card-header>
-      <mat-card-title><h1>Sign in</h1></mat-card-title>
-      <mat-card-subtitle>On-call fairness tracker</mat-card-subtitle>
-    </mat-card-header>
+  <div class="auth-split">
+    <section class="intro" aria-labelledby="intro-heading">
+      <span class="brand"
+        ><span aria-hidden="true">[</span> Fairness <span aria-hidden="true">]</span></span
+      >
+      <h2 id="intro-heading">Who carries the pager, and is it <em>fair</em>?</h2>
+      <pre aria-label="What Fairness tracks">
+<span class="prompt">&gt;</span> fairness --about
+alert load per engineer ..... <b>shared fairly?</b>
+night and weekend pages ..... <b>counted</b>
+burnout risk ................ <b>scored 0–100</b>
+reports ..................... <b>PDF and Excel</b></pre>
+    </section>
 
-    <mat-card-content>
+    <section class="form-side">
+      <span class="eyebrow bracket">Sign in</span>
+      <h1>Welcome back</h1>
+
       @if (notice(); as notice) {
         <p class="notice" role="status">{{ notice }}</p>
       }
@@ -13,6 +24,7 @@
       <form novalidate (submit)="signIn($event)">
         <mat-form-field appearance="outline">
           <mat-label>Email</mat-label>
+          <mat-icon matIconPrefix svgIcon="user" />
           <input matInput type="email" autocomplete="username" [formField]="loginForm.email" />
           @if (firstError(loginForm.email); as message) {
             <mat-error>{{ message }}</mat-error>
@@ -21,6 +33,7 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Password</mat-label>
+          <mat-icon matIconPrefix svgIcon="lock" />
           <input
             matInput
             type="password"
@@ -40,6 +53,6 @@
           {{ loginForm().submitting() ? 'Signing in…' : 'Sign in' }}
         </button>
       </form>
-    </mat-card-content>
-  </mat-card>
+    </section>
+  </div>
 </main>

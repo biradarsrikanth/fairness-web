@@ -14,7 +14,7 @@ import { AuthService } from '../../core/auth/auth';
 import { describeError } from '../../core/http/api-error';
 import { apiResource } from '../../core/http/api-resource';
 import { DateRangeField, DayRange } from '../../shared/components/date-range-field';
-import { formatInstant, humanize } from '../../shared/format';
+import { formatCount, formatInstant, humanize } from '../../shared/format';
 import {
   PAGE_SIZES,
   listQueryParams,
@@ -31,7 +31,7 @@ import {
   hasFilters,
   parseAlertFilter,
 } from './alert-filter';
-import { elapsed, localTimeZone } from './alert-format';
+import { elapsed, localTimeZone, severityClass, statusClass } from './alert-format';
 
 /** Every alert the user may see, newest first, filtered and paged through the URL. */
 @Component({
@@ -49,6 +49,7 @@ import { elapsed, localTimeZone } from './alert-format';
     RouterLink,
   ],
   templateUrl: './alerts-page.html',
+  styleUrl: './alerts-page.scss',
 })
 export class AlertsPage {
   private readonly router = inject(Router);
@@ -122,6 +123,9 @@ export class AlertsPage {
   protected readonly pageSizes = PAGE_SIZES;
   protected readonly elapsed = elapsed;
   protected readonly humanize = humanize;
+  protected readonly total = formatCount;
+  protected readonly severityClass = severityClass;
+  protected readonly statusClass = statusClass;
   private readonly timeZone = localTimeZone();
 
   protected when(instant: string): string {

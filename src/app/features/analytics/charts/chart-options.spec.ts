@@ -4,11 +4,13 @@ import {
   escapeHtml,
   giniTrendOption,
   heatmapOption,
+  loadShareHeight,
   loadShareOption,
+  loadShareRows,
   periodLabel,
   timeOfDayOption,
 } from './chart-options';
-import { EMPTY_CELL, SEVERITY_COLORS } from './palette';
+import { CONSOLE, EMPTY_CELL, PAPER, SEVERITY_COLORS } from './palette';
 
 const window = { start: '2026-09-01', end: '2026-09-30', timezone: 'Asia/Kolkata' };
 const none = { p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, other: 0 };
@@ -42,8 +44,8 @@ describe('chart options', () => {
       const [p1, p3] = option.series;
       // Week 1: P3 is on top; week 2 only has P1
       expect(p1.data[0].itemStyle).toBeUndefined();
-      expect(p3.data[0].itemStyle.borderRadius).toEqual([4, 4, 0, 0]);
-      expect(p1.data[1].itemStyle.borderRadius).toEqual([4, 4, 0, 0]);
+      expect(p3.data[0].itemStyle.borderRadius).toEqual([2, 2, 0, 0]);
+      expect(p1.data[1].itemStyle.borderRadius).toEqual([2, 2, 0, 0]);
     });
 
     it('lists the period in the tooltip with its total', () => {
@@ -133,7 +135,63 @@ describe('chart options', () => {
   it('orders the parts of the day as a day goes', () => {
     const option: Loose = timeOfDayOption({ night: 4, morning: 1, afternoon: 2, evening: 3 });
     expect(option.xAxis.data).toEqual(['Morning', 'Afternoon', 'Evening', 'Night']);
-    expect(option.series[0].data).toEqual([1, 2, 3, 4]);
+    expect(option.series[0].data.map((d: Loose) => d.value)).toEqual([1, 2, 3, 4]);
+    // Night pages in the highlight colour
+    expect(option.series[0].data[3].itemStyle.color).toBe(PAPER.highlight);
+    expect(option.series[0].data[0].itemStyle.color).toBe(PAPER.series1);
+  });
+
+  describe('load share past the limit', () => {
+    const engineers = Array.from({ length: 20 }, (_, i) => ({
+      engineerId: i + 1,
+      name: `Engineer ${i + 1}`,
+      team: 'SRE',
+      sharePct: i === 0 ? 43 : 3,
+      alertCount: i === 0 ? 86 : 6,
+      escalationsReceived: 0,
+      load: 1,
+      oncallHours: null,
+      loadPerOncallHour: null,
+    }));
+
+    it('draws the top engineers and folds the rest into one bar', () => {
+      const rows = loadShareRows(engineers, 12);
+      expect(rows).toHaveLength(13);
+      expect(rows[12]).toMatchObject({ name: '8 others', sharePct: 24, alertCount: 48, others: 8 });
+      expect(rows[12].engineerId).toBeUndefined();
+      expect(loadShareHeight(engineers.length, 12)).toBe(13 * 28 + 48);
+    });
+
+    it('draws one leftover engineer as themselves', () => {
+      expect(loadShareRows(engineers.slice(0, 13), 12).map((r) => r.name)).not.toContain(
+        '1 others',
+      );
+      expect(loadShareRows(engineers.slice(0, 13), 12)).toHaveLength(13);
+    });
+
+    it('highlights anyone carrying more than twice an even share', () => {
+      const option: Loose = loadShareOption(engineers, CONSOLE, 12);
+      expect(option.series[0].data[0].itemStyle.color).toBe(CONSOLE.highlight);
+      expect(option.series[0].data[1].itemStyle).toBeUndefined();
+      // The "others" bar is neutral and not a link to an engineer
+      expect(option.series[0].data[12]).toEqual({
+        value: 24,
+        itemStyle: { color: CONSOLE.ink.axis },
+      });
+    });
+  });
+
+  it('draws every chart in the palette it is given', () => {
+    const series: TimeSeries = {
+      window,
+      team: null,
+      granularity: 'day',
+      points: [{ start: '2026-10-01', total: 1, bySeverity: { ...none, p1: 1 } }],
+    };
+    const option: Loose = alertsOverTimeOption(series, CONSOLE);
+    expect(option.series[0].color).toBe(CONSOLE.severity.p1);
+    expect(option.series[0].itemStyle.borderColor).toBe(CONSOLE.surface);
+    expect(option.tooltip.backgroundColor).toBe(CONSOLE.tooltip.background);
   });
 
   it('escapes HTML', () => {

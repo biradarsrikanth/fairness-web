@@ -13,7 +13,7 @@ import { describeError, errorCode, handlesErrors } from '../../core/http/api-err
 import { apiResource } from '../../core/http/api-resource';
 import { confirmAction } from '../../shared/dialogs/confirm-dialog';
 import { formatInstant, humanize } from '../../shared/format';
-import { elapsed, localTimeZone } from './alert-format';
+import { elapsed, localTimeZone, severityClass, statusClass } from './alert-format';
 
 const KIND_LABELS: Record<string, string> = {
   PAGED: 'Paged',
@@ -72,6 +72,8 @@ export class AlertPage {
 
   protected readonly elapsed = elapsed;
   protected readonly humanize = humanize;
+  protected readonly severityClass = severityClass;
+  protected readonly statusClass = statusClass;
   private readonly timeZone = localTimeZone();
 
   protected when(instant: string | null | undefined): string {

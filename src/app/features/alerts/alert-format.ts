@@ -18,3 +18,29 @@ export function elapsed(from: string | null | undefined, to: string | null | und
 export function localTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
+
+/** The tag style for a severity: P1 in solid red, P2 in solid accent, the rest soft. */
+export function severityClass(severity: string): string {
+  switch (severity.toUpperCase()) {
+    case 'P1':
+      return 'crit';
+    case 'P2':
+      return 'solid';
+    default:
+      return '';
+  }
+}
+
+/** The status dot's colour: open alerts red, acknowledged amber, resolved green. */
+export function statusClass(status: string): string {
+  switch (status.toLowerCase()) {
+    case 'triggered':
+      return 'crit';
+    case 'acknowledged':
+      return 'warn';
+    case 'resolved':
+      return 'ok';
+    default:
+      return '';
+  }
+}

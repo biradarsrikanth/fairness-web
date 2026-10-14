@@ -1,4 +1,4 @@
-// Sign-in and change-password: one card, centred, outside the app shell
+// Sign-in and change-password, outside the app shell
 :host {
   display: block;
   min-height: 100%;
@@ -7,43 +7,124 @@
 .auth-page {
   display: grid;
   place-items: center;
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: 16px;
   box-sizing: border-box;
+  background: var(--bg);
 }
 
+// Change password: one card
 .auth-card {
-  width: min(400px, 100%);
+  width: min(420px, 100%);
+  border-radius: var(--radius-md);
+}
+
+// Sign in: a dark introduction beside the form
+.auth-split {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  width: min(920px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px;
+  background: var(--bar);
+  color: var(--bar-fg);
+
+  h2 {
+    margin: auto 0 0;
+    font: 400 38px/1.06 var(--font-serif);
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+
+    em {
+      color: var(--bar-acc);
+    }
+  }
+
+  pre {
+    margin: 0;
+    font: 11.5px/1.8 var(--font-mono);
+    color: var(--bar-muted);
+    white-space: pre-wrap;
+
+    b {
+      color: var(--bar-fg);
+      font-weight: 500;
+    }
+  }
+}
+
+.brand {
+  font: 700 13px var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+
+  span {
+    color: var(--bar-acc);
+  }
+}
+
+.prompt {
+  color: var(--bar-acc);
+}
+
+.form-side {
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
 }
 
 h1 {
-  margin: 0;
-  font: var(--mat-sys-headline-small);
+  margin: 4px 0 0;
+  font: 400 30px/1.1 var(--font-serif);
+  letter-spacing: -0.02em;
 }
 
 form {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-top: 16px;
+  margin-top: 20px;
+
+  mat-icon[matIconPrefix] {
+    width: 18px;
+    height: 18px;
+    margin: 0 4px 0 10px;
+    color: var(--muted);
+  }
+
+  button[type='submit'] {
+    height: 44px;
+    margin-top: 8px;
+  }
 }
 
 .notice,
 .form-error {
-  margin: 8px 0;
+  margin: 12px 0 0;
   padding: 8px 12px;
-  border-radius: 8px;
-  font: var(--mat-sys-body-medium);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
 }
 
 .notice {
-  background: var(--mat-sys-secondary-container);
-  color: var(--mat-sys-on-secondary-container);
+  border: 1px solid color-mix(in srgb, var(--acc) 30%, transparent);
+  background: var(--acc-tint);
+  color: var(--fg);
 }
 
 .form-error {
-  background: var(--mat-sys-error-container);
-  color: var(--mat-sys-on-error-container);
+  border: 1px solid color-mix(in srgb, var(--crit) 30%, transparent);
+  background: var(--crit-bg);
+  color: var(--crit-ink);
 }
 
 .actions {
@@ -51,4 +132,23 @@ form {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+}
+
+@media (max-width: 719.98px) {
+  .auth-split {
+    grid-template-columns: 1fr;
+  }
+
+  .intro {
+    gap: 16px;
+    padding: 24px;
+
+    h2 {
+      font-size: 28px;
+    }
+  }
+
+  .form-side {
+    padding: 24px;
+  }
 }

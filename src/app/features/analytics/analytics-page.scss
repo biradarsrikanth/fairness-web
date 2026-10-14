@@ -4,25 +4,8 @@
   gap: 16px;
 }
 
-.page-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 16px;
-
-  h1 {
-    margin: 0;
-    font: var(--mat-sys-headline-small);
-  }
-}
-
 .export {
-  margin-left: auto;
-}
-
-.window {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
+  align-self: flex-end;
 }
 
 .content {
@@ -39,7 +22,7 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 
 .notice,
@@ -47,51 +30,70 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  border-radius: 12px;
-  background: var(--mat-sys-secondary-container);
-  color: var(--mat-sys-on-secondary-container);
+  padding: 8px 14px;
+  border: 1px solid color-mix(in srgb, var(--acc) 30%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--acc-tint);
+  color: var(--fg);
+
+  mat-icon {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    color: var(--acc-ink);
+  }
 }
 
 .problem {
-  background: var(--mat-sys-error-container);
-  color: var(--mat-sys-on-error-container);
+  border-color: color-mix(in srgb, var(--crit) 30%, transparent);
+  background: var(--crit-bg);
+  color: var(--crit-ink);
+
+  mat-icon {
+    color: var(--crit);
+  }
 
   span {
     flex: 1;
   }
 }
 
-.panel {
-  min-width: 0;
-  padding: 16px;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 12px;
-  background: var(--chart-surface);
-
-  h2 {
-    margin: 0;
-    font: var(--mat-sys-title-medium);
-  }
+.panel h2 {
+  margin-top: 2px;
 }
 
 .sub {
-  margin: 2px 0 12px;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
+  margin: 3px 0 12px;
+  color: var(--muted);
+  font-size: 12px;
 }
 
-.empty,
-.loading {
-  color: var(--mat-sys-on-surface-variant);
+.empty {
+  color: var(--muted);
 }
 
 .share {
   margin: 24px 0;
-  font: var(--mat-sys-display-small);
+  font: 500 44px/1 var(--font-mono);
+  letter-spacing: -0.03em;
+  color: var(--acc-ink);
 }
 
 .heatmap-table td,
 .heatmap-table th {
   padding: 4px;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tiles-skeleton {
+  height: 128px;
+}
+
+.card-skeleton {
+  height: 340px;
 }

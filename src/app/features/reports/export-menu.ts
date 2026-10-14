@@ -34,18 +34,18 @@ import { MAX_REPORT_DAYS, ReportDownloads, ReportFormat, ReportRequest } from '.
         @if (busy()) {
           <mat-spinner matButtonIcon diameter="18" aria-hidden="true" />
         } @else {
-          <mat-icon>download</mat-icon>
+          <mat-icon svgIcon="download" />
         }
         {{ busy() ? 'Preparing…' : 'Export' }}
       </button>
     </span>
     <mat-menu #formats="matMenu" xPosition="before">
       <button mat-menu-item type="button" (click)="download('pdf')">
-        <mat-icon>picture_as_pdf</mat-icon>
+        <mat-icon svgIcon="pdf" />
         <span>PDF report</span>
       </button>
       <button mat-menu-item type="button" (click)="download('xlsx')">
-        <mat-icon>table_view</mat-icon>
+        <mat-icon svgIcon="sheet" />
         <span>Excel workbook</span>
       </button>
     </mat-menu>

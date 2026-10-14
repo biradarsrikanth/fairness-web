@@ -9,12 +9,13 @@
 
 h2 {
   margin: 0;
-  font: var(--mat-sys-title-medium);
+  font: 400 20px var(--font-serif);
+  letter-spacing: -0.02em;
 }
 
 .sub {
   margin: 2px 0 12px;
-  font: var(--mat-sys-body-small);
+  font-size: 12px;
 }
 
 .facts {
@@ -24,8 +25,10 @@ h2 {
   margin: 0;
 
   dt {
-    color: var(--mat-sys-on-surface-variant);
-    font: var(--mat-sys-label-medium);
+    font: 500 10px var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
   }
 
   dd {
@@ -34,8 +37,8 @@ h2 {
 }
 
 .mono {
-  font-family: ui-monospace, monospace;
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
 
 .timeline {
@@ -58,7 +61,7 @@ h2 {
     bottom: 0;
     left: 5px;
     width: 2px;
-    background: var(--mat-sys-outline-variant);
+    background: var(--line);
   }
 }
 
@@ -68,13 +71,14 @@ h2 {
   height: 12px;
   margin-top: 4px;
   border-radius: 50%;
-  background: var(--mat-sys-primary);
+  background: var(--acc);
+  box-shadow: 0 0 0 3px var(--acc-soft);
 }
 
 .small {
-  font: var(--mat-sys-body-small);
+  font-size: 12px;
 }
 
 a {
-  color: var(--mat-sys-primary);
+  color: var(--acc-ink);
 }

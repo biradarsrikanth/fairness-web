@@ -64,7 +64,7 @@ function toDay(date: Date | null): string | null {
           aria-label="Clear dates"
           (click)="clear()"
         >
-          <mat-icon>close</mat-icon>
+          <mat-icon svgIcon="close" />
         </button>
       }
       <mat-datepicker-toggle matIconSuffix [for]="picker" />

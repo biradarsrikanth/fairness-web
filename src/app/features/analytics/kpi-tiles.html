@@ -1,11 +1,8 @@
 <ul class="tiles" aria-label="Key figures">
   @for (tile of tiles(); track tile.id) {
-    <li class="tile">
+    <li class="tile" [class]="flag(tile) ?? ''">
       <span class="label">{{ tile.label }}</span>
       <span class="value">{{ tile.value }}</span>
-      @if (tile.note) {
-        <span class="note">{{ tile.note }}</span>
-      }
       @if (tile.change; as change) {
         <span
           class="change"
@@ -14,17 +11,30 @@
           [matTooltipDisabled]="!tile.previous"
         >
           @if (change.direction !== 'flat') {
-            <mat-icon aria-hidden="true">{{
-              change.direction === 'up' ? 'arrow_upward' : 'arrow_downward'
-            }}</mat-icon>
+            <mat-icon
+              aria-hidden="true"
+              [svgIcon]="change.direction === 'up' ? 'arrow-up' : 'arrow-down'"
+            />
           }
           {{ change.text }}
-          <span class="compared">{{ comparedWith() }}</span>
           @if (tile.previous) {
             <span class="visually-hidden">. {{ tile.previous }}</span>
           }
         </span>
       }
+      @if (tile.note) {
+        <span class="note">
+          @if (flag(tile)) {
+            <span class="tag" [class.crit]="flag(tile) === 'crit'">{{ tile.note }}</span>
+          } @else {
+            {{ tile.note }}
+          }
+        </span>
+      }
+      @if (trends()[tile.id]; as values) {
+        <app-sparkline [values]="values" [tone]="tile.change?.tone ?? 'neutral'" />
+      }
     </li>
   }
 </ul>
+<p class="compared">Changes compare with {{ previousRange() }}.</p>

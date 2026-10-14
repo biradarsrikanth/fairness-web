@@ -34,6 +34,8 @@ import { burnoutBreakdown, burnoutConfidence } from './burnout-breakdown';
 import { Chart } from './charts/chart';
 import { ChartCard } from './charts/chart-card';
 import { DAY_PARTS, timeOfDayOption } from './charts/chart-options';
+import { chartPalette } from './charts/palette';
+import { ThemeService } from '../../core/theme/theme';
 import { ExportMenu } from '../reports/export-menu';
 import { ReportRequest } from '../reports/report-downloads';
 import { FilterBar } from './filter-bar';
@@ -58,6 +60,7 @@ const RECENT_ALERTS = 10;
 })
 export class EngineerPage {
   private readonly router = inject(Router);
+  private readonly theme = inject(ThemeService);
   private readonly title = inject(Title);
 
   /** Route parameter */
@@ -151,7 +154,7 @@ export class EngineerPage {
   );
   protected readonly timeOfDayChart = computed(() => {
     const data = this.data();
-    return data ? timeOfDayOption(data.timeOfDay) : null;
+    return data ? timeOfDayOption(data.timeOfDay, chartPalette(this.theme.mode())) : null;
   });
   protected readonly totalAlerts = computed(() => {
     const counts = this.data()?.timeOfDay;

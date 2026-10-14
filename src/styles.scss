@@ -1,42 +1,184 @@
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+// Editorial Telemetry. Material builds its structure from mat.theme(); the colours, corners and type come
+// from styles/_tokens.scss. The mode is data-mode="paper" or "console" on <html>, set by ThemeService and,
+// before the app starts, public/theme-boot.js; without it the operating system's preference decides.
 @use '@angular/material' as mat;
+@use 'styles/tokens';
 
 html {
   height: 100%;
   @include mat.theme(
     (
       color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        primary: mat.$cyan-palette,
+        tertiary: mat.$orange-palette,
       ),
-      typography: Roboto,
+      typography: (
+        plain-family: (
+          'Geist Variable',
+          system-ui,
+          sans-serif,
+        ),
+        brand-family: (
+          'Newsreader Variable',
+          Georgia,
+          serif,
+        ),
+        bold-weight: 600,
+        medium-weight: 500,
+        regular-weight: 400,
+      ),
       density: 0,
+    )
+  );
+
+  @include tokens.fonts;
+  @include tokens.shared;
+  @include tokens.paper;
+  @include tokens.material-system;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-mode='paper']) {
+    @include tokens.console;
+  }
+}
+
+html[data-mode='console'] {
+  @include tokens.console;
+}
+
+// Component shapes and type: square-ish corners, monospace button labels, compact data tables
+html {
+  @include mat.button-overrides(
+    (
+      filled-container-shape: var(--radius-sm),
+      outlined-container-shape: var(--radius-sm),
+      text-container-shape: var(--radius-sm),
+      tonal-container-shape: var(--radius-sm),
+      protected-container-shape: var(--radius-sm),
+      filled-label-text-font: var(--font-mono),
+      outlined-label-text-font: var(--font-mono),
+      text-label-text-font: var(--font-mono),
+      tonal-label-text-font: var(--font-mono),
+      protected-label-text-font: var(--font-mono),
+      filled-label-text-size: 12px,
+      outlined-label-text-size: 12px,
+      text-label-text-size: 12px,
+      tonal-label-text-size: 12px,
+      protected-label-text-size: 12px,
+      filled-label-text-tracking: 0.06em,
+      outlined-label-text-tracking: 0.06em,
+      text-label-text-tracking: 0.06em,
+      tonal-label-text-tracking: 0.06em,
+      protected-label-text-tracking: 0.06em,
+      filled-label-text-transform: uppercase,
+      outlined-label-text-transform: uppercase,
+      text-label-text-transform: uppercase,
+      tonal-label-text-transform: uppercase,
+      protected-label-text-transform: uppercase,
+      outlined-outline-color: var(--line),
+    )
+  );
+  // Compact fields: filter bars hold several in a row
+  @include mat.form-field-overrides(
+    (
+      container-height: 44px,
+      container-vertical-padding: 10px,
+      outlined-container-shape: var(--radius-sm),
+    )
+  );
+  @include mat.button-toggle-overrides(
+    (
+      shape: var(--radius-sm),
+      height: 44px,
+      label-text-font: var(--font-mono),
+      label-text-size: 11px,
+      label-text-tracking: 0.06em,
+      selected-state-background-color: var(--acc-soft),
+      selected-state-text-color: var(--acc-ink),
+      divider-color: var(--line),
+      background-color: var(--surface),
+    )
+  );
+  @include mat.table-overrides(
+    (
+      background-color: transparent,
+      header-container-height: 40px,
+      header-headline-font: var(--font-mono),
+      header-headline-size: 10.5px,
+      header-headline-tracking: 0.1em,
+      header-headline-weight: 500,
+      header-headline-color: var(--muted),
+      row-item-container-height: 44px,
+      row-item-label-text-size: 13px,
+      row-item-outline-color: var(--line-soft),
+    )
+  );
+  @include mat.paginator-overrides(
+    (
+      container-background-color: transparent,
+      container-text-font: var(--font-mono),
+      container-text-size: 11px,
+    )
+  );
+  @include mat.menu-overrides(
+    (
+      container-color: var(--surface),
+      container-shape: var(--radius-md),
+      item-label-text-size: 13px,
+    )
+  );
+  @include mat.dialog-overrides(
+    (
+      container-color: var(--surface),
+      container-shape: var(--radius-md),
+    )
+  );
+  @include mat.sidenav-overrides(
+    (
+      container-background-color: var(--side),
+      container-shape: 0,
+      container-divider-color: var(--line),
+      content-background-color: var(--bg),
+    )
+  );
+  @include mat.tooltip-overrides(
+    (
+      container-color: var(--bar),
+      supporting-text-color: var(--bar-fg),
+      container-shape: var(--radius-sm),
+      supporting-text-font: var(--font-mono),
+      supporting-text-size: 11px,
+    )
+  );
+  @include mat.snack-bar-overrides(
+    (
+      container-shape: var(--radius-sm),
+      button-color: var(--bar-acc),
     )
   );
 }
 
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
-  color-scheme: light;
-
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
   margin: 0;
   height: 100%;
+  background-color: var(--bg);
+  color: var(--fg);
+  font: var(--mat-sys-body-medium);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
-/* You can add global styles to this file, and also import other style files */
+
+// Keyboard focus is always visible, in the accent
+:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--acc-soft);
+  color: var(--fg);
+}
 
 // The placeholder in index.html, visible until the app has bootstrapped
 .boot {
@@ -46,14 +188,18 @@ body {
   justify-content: center;
   gap: 16px;
   height: 100vh;
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .boot-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--mat-sys-surface-container-highest);
-  border-top-color: var(--mat-sys-primary);
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--line);
+  border-top-color: var(--acc);
   border-radius: 50%;
   animation: boot-spin 0.8s linear infinite;
 
@@ -68,16 +214,6 @@ body {
   }
 }
 
-// Data colors (features/analytics/charts/palette.ts) and the fixed status palette
-:root {
-  --chart-surface: #fcfcfb;
-  --status-good: #0ca30c;
-  --status-warning: #fab219;
-  --status-critical: #d03b3b;
-  --delta-good: #006300;
-  --delta-bad: #b42f2f;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -88,34 +224,45 @@ body {
   white-space: nowrap;
 }
 
-// Plain tables: the table views of charts and small lists
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font: var(--mat-sys-body-medium);
+// ---------- type helpers ----------
 
-  th,
-  td {
-    padding: 6px 8px;
-    border-bottom: 1px solid var(--mat-sys-outline-variant);
-    text-align: left;
-  }
-
-  th {
-    position: sticky;
-    top: 0;
-    background: var(--chart-surface);
-    color: var(--mat-sys-on-surface-variant);
-    font: var(--mat-sys-label-medium);
-  }
-
-  .num {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-  }
+.serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
-// Page scaffolding shared by the list and detail pages
+.mono {
+  font-family: var(--font-mono);
+}
+
+// Small monospace caps: field names, breadcrumbs, card labels
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+// In a breadcrumb, the current page
+.eyebrow b {
+  color: var(--acc-ink);
+  font-weight: 600;
+}
+
+// A card label in brackets: [ LOAD / ENGINEER ]
+.bracket::before {
+  content: '[ ';
+}
+
+.bracket::after {
+  content: ' ]';
+}
+
+// ---------- page scaffolding shared by every page ----------
+
 .page {
   display: flex;
   flex-direction: column;
@@ -126,14 +273,24 @@ body {
 .page-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 8px 16px;
 
   h1 {
     margin: 0;
-    font: var(--mat-sys-headline-small);
+    font-family: var(--font-serif);
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
   }
+}
+
+.page-sub {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .filters {
@@ -146,9 +303,17 @@ body {
 .panel {
   min-width: 0;
   padding: 16px;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 12px;
-  background: var(--chart-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+
+  > h2 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
 }
 
 .page-problem {
@@ -156,9 +321,10 @@ body {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  border-radius: 12px;
-  background: var(--mat-sys-error-container);
-  color: var(--mat-sys-on-error-container);
+  border: 1px solid color-mix(in srgb, var(--crit) 30%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--crit-bg);
+  color: var(--crit-ink);
 
   > span {
     flex: 1;
@@ -166,7 +332,70 @@ body {
 }
 
 .muted {
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--muted);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.num,
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+// ---------- tables ----------
+
+// Plain tables: the table views of charts and small lists
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--line-soft);
+    text-align: left;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  tbody th {
+    position: static;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--fg);
+  }
+
+  .num {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .failed {
+    color: var(--crit);
+    font-weight: 500;
+  }
+}
+
+// Every Material table: monospace caps for the column names, like the plain tables
+.mat-mdc-header-cell {
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 // mat-table inside a panel: scroll sideways on small screens, rows as links
@@ -180,6 +409,8 @@ body {
 
   .num {
     text-align: right;
+    font-family: var(--font-mono);
+    font-size: 12px;
     font-variant-numeric: tabular-nums;
   }
 
@@ -187,16 +418,128 @@ body {
     cursor: pointer;
 
     &:hover {
-      background: var(--mat-sys-surface-container);
+      background: var(--acc-tint);
     }
   }
 }
 
-.nowrap {
+// ---------- status ----------
+
+// A coloured dot before a status word: Resolved, Acknowledged, Failed
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   white-space: nowrap;
+
+  &::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--dot, var(--faint));
+    flex: none;
+  }
+
+  &.ok {
+    --dot: var(--ok);
+  }
+
+  &.warn {
+    --dot: var(--warn);
+  }
+
+  &.crit {
+    --dot: var(--crit);
+  }
+
+  &.info {
+    --dot: var(--acc);
+  }
 }
 
-.data-table .failed {
-  color: var(--delta-bad);
-  font-weight: 500;
+// A small monospace tag: P1, CRITICAL, DEMO
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  background: var(--acc-soft);
+  color: var(--acc-ink);
+  white-space: nowrap;
+
+  &.solid {
+    background: var(--acc);
+    color: var(--on-acc);
+  }
+
+  &.crit {
+    background: var(--crit);
+    color: #ffffff;
+  }
+
+  &.outline {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+
+  &.muted {
+    background: var(--surface-3);
+    color: var(--muted);
+  }
+}
+
+// ---------- loading placeholders ----------
+
+.skeleton {
+  border-radius: var(--radius-xs);
+  background: linear-gradient(
+    90deg,
+    var(--line-soft) 0%,
+    var(--surface-3) 50%,
+    var(--line-soft) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton 1.4s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes skeleton {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+// ---------- Material touches the overrides can't reach ----------
+
+// Dialog titles in the serif, like page titles
+.mat-mdc-dialog-container .mat-mdc-dialog-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+// Field labels stay in the sans; the monospace is for data
+.mat-mdc-form-field {
+  font-family: var(--font-sans);
+}
+
+.mat-mdc-snack-bar-container .mat-mdc-snackbar-surface {
+  box-shadow: var(--shadow-pop);
+}
+
+mat-icon.mat-icon {
+  // The custom icons draw with currentColor at any size
+  line-height: 1;
 }

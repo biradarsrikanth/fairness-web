@@ -1,24 +1,81 @@
 <a class="skip-link" href="#main">Skip to content</a>
 
-<mat-toolbar class="toolbar">
+<header class="bar">
   @if (handset()) {
     <button
       matIconButton
       type="button"
+      class="bar-icon"
       aria-label="Menu"
       [attr.aria-expanded]="menuOpen()"
       (click)="menuOpen.set(!menuOpen())"
     >
-      <mat-icon>menu</mat-icon>
+      <mat-icon svgIcon="menu" />
     </button>
   }
-  <a class="brand" routerLink="/">Fairness</a>
-  <span class="spacer"></span>
-  <button matButton type="button" class="user-button" [matMenuTriggerFor]="userMenu">
-    <mat-icon>account_circle</mat-icon>
-    <span class="user-name">{{ auth.user()?.fullName }}</span>
+  <a class="brand" routerLink="/" aria-label="Fairness, home">
+    <span class="bracket-mark" aria-hidden="true">[</span>Fairness<span
+      class="bracket-mark"
+      aria-hidden="true"
+      >]</span
+    >
+  </a>
+
+  <button type="button" class="jump" (click)="openJump()" aria-haspopup="dialog">
+    <mat-icon svgIcon="search" />
+    <span class="jump-text">Jump to a page or team</span>
+    <kbd>{{ shortcut }}</kbd>
   </button>
-</mat-toolbar>
+
+  <div class="bar-status">
+    @if (status.sync()) {
+      @if (status.syncFailing()) {
+        <a
+          class="sync failing"
+          routerLink="/admin/sync"
+          matTooltip="The latest PagerDuty sync failed"
+        >
+          <span class="dot warn" aria-hidden="true"></span>PagerDuty sync failing
+        </a>
+      } @else if (syncAge(); as age) {
+        <span class="sync" matTooltip="Last successful PagerDuty sync">
+          <span class="dot ok" aria-hidden="true"></span>PagerDuty {{ age }}
+        </span>
+      }
+    }
+    <button
+      matIconButton
+      type="button"
+      class="bar-icon"
+      [attr.aria-label]="
+        theme.mode() === 'console' ? 'Switch to Paper (light)' : 'Switch to Console (dark)'
+      "
+      [matTooltip]="theme.mode() === 'console' ? 'Paper mode' : 'Console mode'"
+      (click)="theme.toggle()"
+    >
+      <mat-icon [svgIcon]="theme.mode() === 'console' ? 'sun' : 'terminal'" />
+    </button>
+    <button type="button" class="user" [matMenuTriggerFor]="userMenu">
+      <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+      <span class="who">
+        <span class="user-name">{{ auth.user()?.fullName }}</span>
+        <span class="user-role">{{ roleLabel() }} · {{ scope() }}</span>
+      </span>
+      <mat-icon svgIcon="chevron-down" class="caret" />
+    </button>
+  </div>
+</header>
+
+@if (ticker().length > 0) {
+  <a class="ticker" routerLink="/analytics" title="Open analytics">
+    <span class="visually-hidden">Last 30 days:</span>
+    @for (item of ticker(); track item.label) {
+      <span class="tick" [class]="item.tone ?? ''">
+        {{ item.label }} <b>{{ item.value }}</b>
+      </span>
+    }
+  </a>
+}
 
 <div class="progress" aria-hidden="true">
   @if (busy()) {
@@ -29,15 +86,19 @@
 <mat-menu #userMenu="matMenu" xPosition="before">
   <div class="user-summary" role="presentation">
     <div class="user-email">{{ auth.user()?.email }}</div>
-    <div class="user-role">{{ roleLabel() }}</div>
+    <div class="user-menu-role">{{ roleLabel() }} · {{ scope() }}</div>
   </div>
   <mat-divider />
   <a mat-menu-item routerLink="/change-password">
-    <mat-icon>key</mat-icon>
+    <mat-icon svgIcon="key" />
     <span>Change password</span>
   </a>
+  <button mat-menu-item type="button" (click)="theme.toggle()">
+    <mat-icon [svgIcon]="theme.mode() === 'console' ? 'sun' : 'terminal'" />
+    <span>{{ theme.mode() === 'console' ? 'Paper mode' : 'Console mode' }}</span>
+  </button>
   <button mat-menu-item type="button" (click)="signOut()">
-    <mat-icon>logout</mat-icon>
+    <mat-icon svgIcon="logout" />
     <span>Sign out</span>
   </button>
 </mat-menu>
@@ -49,24 +110,37 @@
     [opened]="!handset() || menuOpen()"
     (closedStart)="menuOpen.set(false)"
   >
-    <nav aria-label="Main">
-      <mat-nav-list>
-        @for (item of items(); track item.path) {
-          <a
-            mat-list-item
-            [routerLink]="item.path"
-            routerLinkActive
-            #link="routerLinkActive"
-            [activated]="link.isActive"
-            [attr.aria-current]="link.isActive ? 'page' : null"
-            (click)="navigated()"
-          >
-            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-            <span matListItemTitle>{{ item.label }}</span>
-          </a>
-        }
-      </mat-nav-list>
+    <nav aria-label="Main" class="nav">
+      @for (group of groups(); track group.label) {
+        <div class="nav-group" [attr.id]="'nav-' + group.label">{{ group.label }}</div>
+        <ul [attr.aria-labelledby]="'nav-' + group.label">
+          @for (item of group.items; track item.path) {
+            <li>
+              <a
+                class="nav-item"
+                [routerLink]="item.path"
+                routerLinkActive="on"
+                ariaCurrentWhenActive="page"
+                (click)="navigated()"
+              >
+                <mat-icon [svgIcon]="item.icon" />
+                <span class="nav-label">{{ item.label }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
     </nav>
+    <dl class="side-foot">
+      <div>
+        <dt>Signed in as</dt>
+        <dd>{{ roleLabel() }}</dd>
+      </div>
+      <div>
+        <dt>Scope</dt>
+        <dd>{{ scope() }}</dd>
+      </div>
+    </dl>
   </mat-sidenav>
 
   <mat-sidenav-content>
@@ -75,3 +149,31 @@
     </main>
   </mat-sidenav-content>
 </mat-sidenav-container>
+
+<footer class="statusbar" aria-label="Status">
+  <span class="conn" [class]="telemetry.connection()" role="status">
+    <mat-icon svgIcon="link" />{{ connectionText() }}
+  </span>
+  @if (telemetry.latencyMs() !== null) {
+    <span
+      >API <b>{{ telemetry.latencyMs() }} ms</b></span
+    >
+  }
+  @if (figuresAge(); as age) {
+    <span
+      ><mat-icon svgIcon="clock" />Figures <b>{{ age }}</b></span
+    >
+  }
+  @if (syncText(); as text) {
+    <span
+      ><mat-icon svgIcon="database" />PagerDuty <b>{{ text }}</b></span
+    >
+  }
+  <span class="tz"
+    >Times <b>{{ timeZone }}</b></span
+  >
+  <span class="push"
+    ><kbd>{{ shortcut }}</kbd> jump</span
+  >
+  <span>{{ theme.mode() === 'console' ? 'Console' : 'Paper' }}</span>
+</footer>

@@ -1,4 +1,5 @@
 import {
+  formatAgo,
   formatCount,
   formatDay,
   formatInstant,
@@ -42,5 +43,25 @@ describe('format', () => {
   it('groups thousands and humanizes enum values', () => {
     expect(formatCount(1234)).toBe('1,234');
     expect(humanize('ONCALL_ROTATION')).toBe('Oncall rotation');
+  });
+});
+
+describe('formatAgo', () => {
+  const now = Date.parse('2026-10-14T12:00:00Z');
+
+  it('rounds down to whole minutes, hours and days', () => {
+    expect(formatAgo('2026-10-14T11:59:30Z', now)).toBe('just now');
+    expect(formatAgo('2026-10-14T11:56:00Z', now)).toBe('4 min ago');
+    expect(formatAgo('2026-10-14T09:00:00Z', now)).toBe('3 h ago');
+    expect(formatAgo('2026-10-12T11:00:00Z', now)).toBe('2 d ago');
+  });
+
+  it('takes epoch milliseconds and treats the future as now', () => {
+    expect(formatAgo(now - 120_000, now)).toBe('2 min ago');
+    expect(formatAgo(now + 60_000, now)).toBe('just now');
+  });
+
+  it('shows a dash for an unreadable time', () => {
+    expect(formatAgo('not a time', now)).toBe('–');
   });
 });

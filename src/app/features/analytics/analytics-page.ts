@@ -7,6 +7,7 @@ import { getAnalyticsSnapshot } from '../../api/functions';
 import { Snapshot } from '../../api/models';
 import { AuthService } from '../../core/auth/auth';
 import { describeError } from '../../core/http/api-error';
+import { ThemeService } from '../../core/theme/theme';
 import { apiResource } from '../../core/http/api-resource';
 import { formatPct, formatRange, humanize } from '../../shared/format';
 import {
@@ -21,6 +22,7 @@ import { BurnoutTable } from './burnout-table';
 import { Chart } from './charts/chart';
 import { ChartCard } from './charts/chart-card';
 import {
+  LOAD_SHARE_LIMIT,
   WEEKDAYS,
   alertsOverTimeOption,
   giniTrendOption,
@@ -31,6 +33,7 @@ import {
   severitiesIn,
   trendPeriodLabel,
 } from './charts/chart-options';
+import { chartPalette } from './charts/palette';
 import { ExportMenu } from '../reports/export-menu';
 import { ReportRequest } from '../reports/report-downloads';
 import { FilterBar } from './filter-bar';
@@ -61,6 +64,9 @@ import { TopServices } from './top-services';
 export class AnalyticsPage {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
+  private readonly theme = inject(ThemeService);
+  /** Charts redraw in the colours of the current mode */
+  private readonly palette = computed(() => chartPalette(this.theme.mode()));
 
   /** Query parameters */
   readonly team = input<string>();
@@ -128,7 +134,7 @@ export class AnalyticsPage {
 
   protected readonly alertsChart = computed(() => {
     const data = this.data();
-    return data ? alertsOverTimeOption(data.alertsOverTime) : null;
+    return data ? alertsOverTimeOption(data.alertsOverTime, this.palette()) : null;
   });
   protected readonly severities = computed(() => {
     const data = this.data();
@@ -136,18 +142,39 @@ export class AnalyticsPage {
   });
   protected readonly giniChart = computed(() => {
     const trend = this.data()?.trend;
-    return trend ? giniTrendOption(trend.periods, trend.granularity, trend.window.timezone) : null;
+    return trend
+      ? giniTrendOption(trend.periods, trend.granularity, trend.window.timezone, this.palette())
+      : null;
   });
   protected readonly loadChart = computed(() => {
     const data = this.data();
-    return data ? loadShareOption(data.loadShare) : null;
+    return data ? loadShareOption(data.loadShare, this.palette()) : null;
   });
   protected readonly loadHeight = computed(() =>
     loadShareHeight(this.data()?.loadShare.length ?? 0),
   );
   protected readonly heatmapChart = computed(() => {
     const data = this.data();
-    return data ? heatmapOption(data.heatmap) : null;
+    return data ? heatmapOption(data.heatmap, this.palette()) : null;
+  });
+  /** Per-period values behind three of the tiles, for their trend lines. */
+  protected readonly trends = computed(() => {
+    const data = this.data();
+    if (!data) return {};
+    const periods = data.trend.scores.available ? data.trend.periods : [];
+    return {
+      alerts: data.alertsOverTime.points.map((point) => point.total),
+      ...(periods.length > 1 && {
+        gini: periods.map((period) => period.gini),
+        'high-risk': periods.map((period) => period.highRiskCount),
+      }),
+    };
+  });
+  protected readonly loadSubheading = computed(() => {
+    const count = this.data()?.loadShare.length ?? 0;
+    return count > LOAD_SHARE_LIMIT + 1
+      ? `The ${LOAD_SHARE_LIMIT} biggest shares of ${count} engineers; select a bar for details`
+      : "Each engineer's share of the weighted load; select a bar for details";
   });
   /** The heatmap's cells by weekday, for its table view. */
   protected readonly heatmapRows = computed(() => {

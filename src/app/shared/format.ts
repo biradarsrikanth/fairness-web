@@ -100,3 +100,15 @@ export function humanize(value: string): string {
   const words = value.toLowerCase().replaceAll('_', ' ');
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
+
+/** just now, 4 min ago, 3 h ago, 2 d ago */
+export function formatAgo(instant: string | number, now = Date.now()): string {
+  const then = typeof instant === 'number' ? instant : Date.parse(instant);
+  if (Number.isNaN(then)) return '–';
+  const minutes = Math.max(0, Math.floor((now - then) / 60_000));
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} h ago`;
+  return `${Math.floor(hours / 24)} d ago`;
+}

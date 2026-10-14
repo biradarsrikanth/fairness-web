@@ -6,10 +6,10 @@
 .card {
   height: 100%;
   box-sizing: border-box;
-  padding: 16px 16px 12px;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 12px;
-  background: var(--chart-surface);
+  padding: 14px 16px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
 }
 
 header {
@@ -21,21 +21,30 @@ header {
 }
 
 h2 {
-  margin: 0;
-  font: var(--mat-sys-title-medium);
+  margin: 2px 0 0;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 header p {
-  margin: 2px 0 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.toggle {
+  flex: none;
+  color: var(--acc-ink);
 }
 
 .empty {
   margin: 0;
   padding: 48px 0;
   text-align: center;
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--muted);
 }
 
 .table-view {

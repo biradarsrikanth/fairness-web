@@ -1,8 +1,11 @@
 <div class="page">
   <div class="page-bar">
-    <h1>Users</h1>
+    <div>
+      <span class="eyebrow">Admin / <b>Users</b></span>
+      <h1>Users</h1>
+    </div>
     <button matButton="filled" type="button" (click)="edit()">
-      <mat-icon>person_add</mat-icon>
+      <mat-icon svgIcon="person-add" />
       Add user
     </button>
   </div>
@@ -10,7 +13,7 @@
   <div class="filters" role="group" aria-label="Filters">
     <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search">
       <mat-label>Search</mat-label>
-      <mat-icon matIconPrefix>search</mat-icon>
+      <mat-icon matIconPrefix svgIcon="search" />
       <input
         matInput
         type="search"
@@ -43,7 +46,7 @@
 
   @if (error()) {
     <div class="page-problem" role="alert">
-      <mat-icon aria-hidden="true">error</mat-icon>
+      <mat-icon aria-hidden="true" svgIcon="error" />
       <span>Couldn't load users. {{ error() }}</span>
       <button matButton type="button" (click)="users.reload()">Try again</button>
     </div>
@@ -131,32 +134,32 @@
                   [matMenuTriggerFor]="menu"
                   [attr.aria-label]="'Actions for ' + user.fullName"
                 >
-                  <mat-icon>more_vert</mat-icon>
+                  <mat-icon svgIcon="more" />
                 </button>
                 <mat-menu #menu="matMenu" xPosition="before">
                   <button mat-menu-item type="button" (click)="edit(user)">
-                    <mat-icon>edit</mat-icon>
+                    <mat-icon svgIcon="edit" />
                     <span>Edit</span>
                   </button>
                   @if (user.role === 'MANAGER') {
                     <button mat-menu-item type="button" (click)="editTeams(user)">
-                      <mat-icon>groups</mat-icon>
+                      <mat-icon svgIcon="teams" />
                       <span>Teams</span>
                     </button>
                   }
                   @if (isLocked(user)) {
                     <button mat-menu-item type="button" (click)="unlock(user)">
-                      <mat-icon>lock_open</mat-icon>
+                      <mat-icon svgIcon="unlock" />
                       <span>Unlock</span>
                     </button>
                   }
                   <button mat-menu-item type="button" (click)="resetPassword(user)">
-                    <mat-icon>key</mat-icon>
+                    <mat-icon svgIcon="key" />
                     <span>Reset password</span>
                   </button>
                   @if (user.id !== myId()) {
                     <button mat-menu-item type="button" (click)="remove(user)">
-                      <mat-icon>delete</mat-icon>
+                      <mat-icon svgIcon="delete" />
                       <span>Delete</span>
                     </button>
                   }

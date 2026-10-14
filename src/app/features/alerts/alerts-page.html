@@ -1,7 +1,18 @@
 <div class="page">
-  <div class="page-bar">
-    <h1>Alerts</h1>
-  </div>
+  <header class="page-bar">
+    <div>
+      <span class="eyebrow">Monitor / <b>Alerts</b></span>
+      <h1>Alerts</h1>
+      <p class="page-sub">
+        @if (data(); as page) {
+          {{ total(page.totalElements) }} {{ filtered() ? 'matching alerts' : 'alerts' }}, newest
+          first.
+        } @else {
+          Every alert you can see, newest first.
+        }
+      </p>
+    </div>
+  </header>
 
   <div class="filters" role="group" aria-label="Filters">
     @if (teams().length > 1) {
@@ -52,7 +63,7 @@
         <mat-chip (removed)="setFilter('engineerId', null)">
           {{ engineerName() ?? 'Engineer ' + filter().engineerId }}
           <button matChipRemove aria-label="Show every engineer's alerts">
-            <mat-icon>cancel</mat-icon>
+            <mat-icon svgIcon="cancel" />
           </button>
         </mat-chip>
       </mat-chip-set>
@@ -64,7 +75,7 @@
 
   @if (error()) {
     <div class="page-problem" role="alert">
-      <mat-icon aria-hidden="true">error</mat-icon>
+      <mat-icon aria-hidden="true" svgIcon="error" />
       <span>Couldn't load alerts. {{ error() }}</span>
       <button matButton type="button" (click)="alerts.reload()">Try again</button>
     </div>
@@ -91,19 +102,26 @@
           >
             <ng-container matColumnDef="triggeredAt">
               <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc">Triggered</th>
-              <td mat-cell *matCellDef="let alert" class="nowrap">{{ when(alert.triggeredAt) }}</td>
+              <td mat-cell *matCellDef="let alert" class="nowrap time">
+                {{ when(alert.triggeredAt) }}
+              </td>
             </ng-container>
             <ng-container matColumnDef="title">
               <th mat-header-cell *matHeaderCellDef>Alert</th>
-              <td mat-cell *matCellDef="let alert">
-                <a [routerLink]="['/alerts', alert.id]" (click)="$event.stopPropagation()">{{
-                  alert.title ?? 'Untitled alert'
-                }}</a>
+              <td mat-cell *matCellDef="let alert" class="title-cell">
+                <a
+                  [routerLink]="['/alerts', alert.id]"
+                  [title]="alert.title ?? 'Untitled alert'"
+                  (click)="$event.stopPropagation()"
+                  >{{ alert.title ?? 'Untitled alert' }}</a
+                >
               </td>
             </ng-container>
             <ng-container matColumnDef="serviceName">
               <th mat-header-cell *matHeaderCellDef>Service</th>
-              <td mat-cell *matCellDef="let alert">{{ alert.serviceName ?? '–' }}</td>
+              <td mat-cell *matCellDef="let alert" [title]="alert.serviceName ?? ''">
+                {{ alert.serviceName ?? '–' }}
+              </td>
             </ng-container>
             <ng-container matColumnDef="engineerName">
               <th mat-header-cell *matHeaderCellDef>Paged</th>
@@ -113,20 +131,36 @@
             </ng-container>
             <ng-container matColumnDef="team">
               <th mat-header-cell *matHeaderCellDef>Team</th>
-              <td mat-cell *matCellDef="let alert">{{ alert.team ?? '–' }}</td>
+              <td mat-cell *matCellDef="let alert" [title]="alert.team ?? ''">
+                {{ alert.team ?? '–' }}
+              </td>
             </ng-container>
             <ng-container matColumnDef="severity">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Severity</th>
-              <td mat-cell *matCellDef="let alert">{{ alert.severity ?? '–' }}</td>
+              <td mat-cell *matCellDef="let alert">
+                @if (alert.severity) {
+                  <span class="tag" [class]="severityClass(alert.severity)">{{
+                    alert.severity
+                  }}</span>
+                } @else {
+                  –
+                }
+              </td>
             </ng-container>
             <ng-container matColumnDef="status">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
               <td mat-cell *matCellDef="let alert">
-                {{ alert.status ? humanize(alert.status) : '–' }}
+                @if (alert.status) {
+                  <span class="status-dot" [class]="statusClass(alert.status)">{{
+                    humanize(alert.status)
+                  }}</span>
+                } @else {
+                  –
+                }
               </td>
             </ng-container>
             <ng-container matColumnDef="ack">
-              <th mat-header-cell *matHeaderCellDef class="num">To acknowledge</th>
+              <th mat-header-cell *matHeaderCellDef class="num">To ack</th>
               <td mat-cell *matCellDef="let alert" class="num">
                 {{ elapsed(alert.triggeredAt, alert.acknowledgedAt) }}
               </td>
@@ -158,6 +192,6 @@
       />
     </section>
   } @else if (alerts.isLoading()) {
-    <p class="muted" role="status">Loading alerts…</p>
+    <div class="skeleton" style="height: 480px" role="status" aria-label="Loading alerts"></div>
   }
 </div>

@@ -1,8 +1,8 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormField, email, form, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth';
@@ -12,7 +12,7 @@ import { safeReturnUrl } from './return-url';
 
 @Component({
   selector: 'app-login',
-  imports: [FormField, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule],
+  imports: [FormField, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule],
   templateUrl: './login.html',
   styleUrl: './auth-page.scss',
 })
