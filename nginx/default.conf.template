@@ -21,6 +21,15 @@ server {
 
     server_tokens off;
 
+    # Compress text: the app's scripts and styles, and the gateway's JSON (an analytics snapshot or a page
+    # of alerts shrinks by about 80%). PDFs and spreadsheets are compressed already, so they're left alone.
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 5;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css application/javascript application/json application/problem+json image/svg+xml;
+
     # Nginx itself is up (the container healthcheck)
     location = /healthz {
         access_log off;
@@ -47,6 +56,13 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $forwarded_proto;
         add_header Strict-Transport-Security $hsts always;
+    }
+
+    # Files with fixed names can change in a release, so browsers check them each time
+    location ~ ^/(theme-boot\.js|favicon\.ico)$ {
+        add_header Cache-Control "no-cache" always;
+        include /etc/nginx/snippets/security-headers.conf;
+        try_files $uri =404;
     }
 
     # Built files carry a content hash in their names: cache them for good
