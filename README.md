@@ -165,6 +165,8 @@ pages: the gateway checks every request.
   light (P5).
 - Fairness and burnout come from the scorer. When it's down, or a manager looks at several teams at once, the
   page says why and shows everything else.
+- An admin looking at every team sees each team's own Gini in **Fairness by team**; the Gini tile is their
+  average, weighted by alerts.
 - Date fields read and show dates day first (13/10/2026).
 - **Export** (analytics and engineer pages) downloads a PDF or Excel report of exactly the days on screen, built
   by the gateway (`features/reports`). A failed download's error arrives as a Blob; `readableError()` turns it
