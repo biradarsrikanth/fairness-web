@@ -1,0 +1,17 @@
+node_modules
+dist
+.angular
+.git
+.claude
+.vscode
+.idea
+openapi
+scripts
+*.md
+Dockerfile
+.dockerignore
+e2e
+playwright.config.ts
+test-results
+playwright-report
+docker-compose.yml

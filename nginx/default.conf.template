@@ -1,0 +1,65 @@
+# The web app, with /api (and the API docs) proxied to the gateway at ${GATEWAY_URL}
+
+# TLS ends in front of this container (Azure, a load balancer): the scheme the browser used is in
+# X-Forwarded-Proto. Without one, this container is the edge and the request's own scheme applies.
+map $http_x_forwarded_proto $forwarded_proto {
+    ""      $scheme;
+    default $http_x_forwarded_proto;
+}
+
+# HSTS only over HTTPS: an empty value sends no header, so plain-HTTP demos on localhost aren't pinned
+map $forwarded_proto $hsts {
+    https   "max-age=31536000; includeSubDomains";
+    default "";
+}
+
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    server_tokens off;
+
+    # Nginx itself is up (the container healthcheck)
+    location = /healthz {
+        access_log off;
+        return 200 "ok\n";
+    }
+
+    # The gateway sets its own security headers on API responses; only HSTS is added here
+    location /api/ {
+        proxy_pass ${GATEWAY_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+        # Reports are built while the request waits
+        proxy_read_timeout 120s;
+        client_max_body_size 1m;
+        add_header Strict-Transport-Security $hsts always;
+    }
+
+    # Swagger UI keeps the gateway's headers: the app's CSP would block its scripts
+    location ~ ^/(swagger-ui|v3/api-docs) {
+        proxy_pass ${GATEWAY_URL};
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+        add_header Strict-Transport-Security $hsts always;
+    }
+
+    # Built files carry a content hash in their names: cache them for good
+    location ~* \.(?:js|css|woff2?|ttf|svg|png|ico)$ {
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        include /etc/nginx/snippets/security-headers.conf;
+        try_files $uri =404;
+    }
+
+    # Every other path is a page of the app: index.html, never cached so a new release shows at once
+    location / {
+        add_header Cache-Control "no-cache" always;
+        include /etc/nginx/snippets/security-headers.conf;
+        try_files $uri $uri/ /index.html;
+    }
+}
