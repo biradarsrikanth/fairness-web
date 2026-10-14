@@ -17,10 +17,47 @@ npm start            # http://localhost:4200, /api proxied to :8080 (proxy.conf.
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `npm start`                       | Dev server with the proxy                                                                                                                                                         |
 | `npm test`                        | Unit tests (Vitest, jsdom)                                                                                                                                                        |
+| `npm run e2e`                     | End-to-end test (Playwright) against a running stack; see below                                                                                                                   |
 | `npm run lint`                    | ESLint (angular-eslint), templates included                                                                                                                                       |
 | `npm run format` / `format:check` | Prettier                                                                                                                                                                          |
 | `npm run build`                   | Production build into `dist/`                                                                                                                                                     |
 | `npm run api`                     | Refresh the API client: `api:fetch` saves the gateway's spec to `openapi/gateway.json` (`GATEWAY_URL`, default `http://localhost:8080`), `api:generate` regenerates `src/app/api` |
+
+## Docker
+
+The image builds the app and serves it with Nginx, which passes `/api` (and the gateway's Swagger UI) to
+`GATEWAY_URL` (default `http://gateway:8080`), so the browser sees one origin, as with the dev server.
+
+```bash
+docker network create fairness-net   # once per machine, shared with the gateway and the scorer
+docker compose up --build            # http://localhost:4280; the gateway runs from its own repo on fairness-net
+```
+
+For the whole app with a throwaway database and made-up data, run `docker compose up --build` in the parent
+folder instead (http://localhost:8088).
+
+- `nginx/default.conf.template`: routes, `/healthz` for the container healthcheck, caching (hashed files for a
+  year, `index.html` never, so a release shows on the next load), and 120 s for reports to build.
+- `nginx/security-headers.conf`: Content-Security-Policy (scripts from this origin only, Google Fonts for fonts),
+  HSTS when the request came over HTTPS (TLS ends in front of Nginx and sends `X-Forwarded-Proto`),
+  `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`.
+- The production build turns critical-CSS inlining off (`angular.json`): its loader is an inline script, which
+  the policy would block. Styles allow `'unsafe-inline'` because Angular adds component styles as `<style>` tags.
+
+## End-to-end test
+
+`e2e/` drives the built app in Chromium through Nginx with a real gateway, scorer and database: a manager signs
+in, reads the analytics page, downloads the PDF and the Excel report (checking they really are a PDF and an
+XLSX), and finds both in My reports. It fails on any CSP violation, page error or failed request.
+
+```bash
+npx playwright install chromium      # once
+(cd .. && docker compose up --build -d)
+npm run e2e                          # report in playwright-report/, traces of failures in test-results/
+```
+
+`E2E_BASE_URL`, `E2E_EMAIL` and `E2E_PASSWORD` point it at another deployment (default: the demo stack and its
+manager).
 
 ## API client
 
@@ -65,7 +102,8 @@ commit `openapi/gateway.json` with the regenerated client.
 src/app/
   api/        generated client (npm run api)
   core/       auth (service, interceptor, guards), http (errors, loading), layout (shell, navigation)
-  features/   pages, one folder each (auth, analytics, alerts, engineers, teams, oncall, admin/{users,sync,audit})
+  features/   pages, one folder each (auth, analytics, reports, alerts, engineers, teams, oncall,
+              admin/{users,sync,audit})
   shared/     reusable pieces (formatting, form helpers, list state, dialogs, the risk badge, date range field)
 ```
 
@@ -73,7 +111,9 @@ src/app/
 
 | Path                                     | Who              | What                                                                                 |
 | ---------------------------------------- | ---------------- | ------------------------------------------------------------------------------------ |
-| `/analytics`, `/analytics/engineers/:id` | everyone         | KPIs, charts, burnout; one engineer's breakdown                                      |
+| `/analytics`, `/analytics/engineers/:id` | everyone         | KPIs, charts, burnout; one engineer's breakdown; PDF and Excel export                |
+| `/reports`                               | everyone         | My reports: past downloads, and making one again                                     |
+| `/login`, `/change-password`             | everyone         | Sign in; a new password (required after a reset or for the first admin)              |
 | `/alerts`, `/alerts/:id`                 | everyone         | Alerts by team, severity, status and date; an alert's paging history (admins delete) |
 | `/oncall`                                | everyone         | Who is on call now; shifts in a date range                                           |
 | `/engineers`                             | managers, admins | Add, edit, mark inactive, remove                                                     |
