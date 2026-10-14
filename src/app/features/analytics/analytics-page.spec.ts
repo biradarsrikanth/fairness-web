@@ -113,7 +113,7 @@ describe('AnalyticsPage', () => {
       ['Payments', '0.61', 'Critical', '10', '4'],
       ['SRE', '0.20', 'Fair', '30', '4'],
     ]);
-    expect(text(page.querySelector('app-kpi-tiles')!)).toContain('average of 2 teams');
+    expect(text(page.querySelector('app-kpi-tiles')!)).toContain('Average of 2 teams');
   });
 
   it('leaves out the team table for one team', async () => {
@@ -121,7 +121,7 @@ describe('AnalyticsPage', () => {
     snapshotRequest().flush(snapshot());
     await render();
     expect(page.querySelector('app-team-fairness')).toBeNull();
-    expect(text(page.querySelector('app-kpi-tiles')!)).not.toContain('average of');
+    expect(text(page.querySelector('app-kpi-tiles')!)).not.toContain('Average of');
   });
 
   it('leaves the defaults to the gateway', async () => {

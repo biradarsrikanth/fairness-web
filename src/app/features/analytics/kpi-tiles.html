@@ -31,6 +31,9 @@
           }
         </span>
       }
+      @if (tile.detail) {
+        <span class="note">{{ tile.detail }}</span>
+      }
       @if (trends()[tile.id]; as values) {
         <app-sparkline [values]="values" [tone]="tile.change?.tone ?? 'neutral'" />
       }

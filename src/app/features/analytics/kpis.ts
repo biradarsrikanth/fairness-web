@@ -20,6 +20,8 @@ export interface KpiTile {
   readonly change: KpiChange | null;
   /** A line under the value: the fairness label, or why a score is missing */
   readonly note: string | null;
+  /** One more line, e.g. that the Gini averages several teams */
+  readonly detail?: string;
 }
 
 type Kind = 'count' | 'minutes' | 'pct' | 'gini';
@@ -116,7 +118,7 @@ function scoreTile(id: string, label: string, scores: ScoresStatus): KpiTile {
 /**
  * The tiles across the top of the page. The scorer's figures (Gini, high-risk engineers) show why they're
  * missing when they are; an engineer gets no high-risk count (peers' burnout is private). With several teams the
- * Gini is the average of each team's own, weighted by their alerts, and its note says so.
+ * Gini is the average of each team's own, weighted by their alerts, and the tile says so.
  */
 export function kpiTiles(summary: Summary, teamCount = 1): KpiTile[] {
   const tiles = [
@@ -129,11 +131,10 @@ export function kpiTiles(summary: Summary, teamCount = 1): KpiTile[] {
   if (summary.scores.available) {
     if (summary.gini) {
       const label = summary.fairnessLabel ? humanize(summary.fairnessLabel) : null;
-      const note =
-        teamCount > 1
-          ? [label, `average of ${teamCount} teams`].filter(Boolean).join(' · ')
-          : label;
-      tiles.push(tile('gini', 'Fairness (Gini)', 'gini', summary.gini, note));
+      tiles.push({
+        ...tile('gini', 'Fairness (Gini)', 'gini', summary.gini, label),
+        ...(teamCount > 1 && { detail: `Average of ${teamCount} teams` }),
+      });
     }
     if (summary.highRiskEngineers) {
       tiles.push(
