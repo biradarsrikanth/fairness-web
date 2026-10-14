@@ -22,7 +22,7 @@ import {
   parseListState,
   sortChange,
 } from '../../shared/list/list-state';
-import { todayIn } from '../analytics/analytics-filter';
+import { addDays, todayIn } from '../analytics/analytics-filter';
 import { localTimeZone } from '../alerts/alert-format';
 import {
   MAX_RANGE_DAYS,
@@ -35,7 +35,7 @@ import {
 
 const SHIFT_LIST = { sortable: ['startsAt', 'endsAt'], defaultSort: 'startsAt,asc' };
 
-/** On-call shifts synced from PagerDuty: who is on call now, and the shifts around a date range. */
+/** On-call shifts (from PagerDuty when it's set up): who is on call now, and the shifts around a date range. */
 @Component({
   selector: 'app-oncall-page',
   imports: [
@@ -95,18 +95,27 @@ export class OncallPage {
     return error ? describeError(error) : null;
   });
 
-  /** Today's shifts, whatever the range, for "on call now" */
+  /**
+   * The shifts around now, whatever the range, for "on call now". The gateway reads days in its own time zone,
+   * so asking from yesterday to tomorrow covers this instant wherever that is.
+   */
   private readonly today = apiResource(listOncallShifts, () => {
     const today = todayIn('UTC');
     const engineerId = this.engineer();
-    return { start: today, end: today, ...(engineerId !== null && { engineerId }), size: 100 };
+    return {
+      start: addDays(today, -1),
+      end: addDays(today, 1),
+      ...(engineerId !== null && { engineerId }),
+      size: 100,
+      sort: ['endsAt,desc'],
+    };
   });
   protected readonly now = computed(() =>
     this.today.hasValue()
       ? this.today
           .value()!
           .content.filter((shift) => isCurrent(shift))
-          .sort((a, b) => a.escalationLevel - b.escalationLevel)
+          .sort((a, b) => a.team.localeCompare(b.team) || a.escalationLevel - b.escalationLevel)
       : null,
   );
 
@@ -132,7 +141,11 @@ export class OncallPage {
     return team ? { team, size: 100, sort: ['name,asc'] } : undefined;
   });
 
-  protected readonly columns = ['engineer', 'level', 'startsAt', 'endsAt', 'length'];
+  protected readonly columns = ['engineer', 'team', 'level', 'startsAt', 'endsAt', 'length'];
+  /** Whether "on call now" spans several teams, so each line names its team */
+  protected readonly severalTeams = computed(
+    () => new Set((this.now() ?? []).map((shift) => shift.team)).size > 1,
+  );
   protected readonly pageSizes = PAGE_SIZES;
   protected readonly maxDays = MAX_RANGE_DAYS;
   protected readonly levelLabel = levelLabel;

@@ -39,6 +39,7 @@ describe('OncallPage', () => {
     id: 1,
     engineerId: 3,
     engineerName: 'Asha Rao',
+    team: 'SRE',
     escalationLevel: 1,
     startsAt: new Date(Date.now() - 24 * hour).toISOString(),
     endsAt: new Date(Date.now() + 24 * hour).toISOString(),
@@ -64,10 +65,15 @@ describe('OncallPage', () => {
 
   afterEach(() => page.http.verify());
 
-  function answerSideRequests(): void {
-    page.http
-      .expectOne((r) => r.url === '/api/v1/oncall' && r.params.get('size') === '100')
-      .flush(pageOf([backup, current]));
+  function answerSideRequests(now = [backup, current]): void {
+    const request = page.http.expectOne(
+      (r) => r.url === '/api/v1/oncall' && r.params.get('size') === '100',
+    );
+    // From yesterday to tomorrow, so the gateway's time zone can't leave out this instant
+    const today = new Date().toISOString().slice(0, 10);
+    expect(request.request.params.get('start')! < today).toBe(true);
+    expect(request.request.params.get('end')! > today).toBe(true);
+    request.flush(pageOf(now));
     page.http.expectOne((r) => r.url === '/api/v1/engineers').flush(pageOf([]));
   }
 
@@ -86,10 +92,31 @@ describe('OncallPage', () => {
     const now = Array.from(element.querySelectorAll('.now li')).map(text);
     expect(now[0]).toContain('Primary Asha Rao');
     expect(now[1]).toContain('Level 2 Ravi Kumar');
+    expect(now[0]).not.toContain('SRE');
     const rows = element.querySelectorAll('tr[mat-row]');
+    expect(text(rows[1])).toContain('SRE');
     expect(rows[1].classList).toContain('current');
     expect(text(rows[1])).toContain('Now');
     expect(text(rows[1])).toContain('2 d');
+  });
+
+  it('names the team of each person on call when there are several', async () => {
+    await page.harness.navigateByUrl('/oncall');
+    await page.render();
+    page.http
+      .expectOne((r) => r.url === '/api/v1/oncall' && r.params.get('size') !== '100')
+      .flush(pageOf([]));
+    answerSideRequests([
+      backup,
+      current,
+      { ...current, id: 9, team: 'Payments', engineerName: 'Li' },
+    ]);
+    const element = await page.render();
+
+    const now = Array.from(element.querySelectorAll('.now li')).map(text);
+    expect(now[0]).toContain('Payments · Primary Li');
+    expect(now[1]).toContain('SRE · Primary Asha Rao');
+    expect(now[2]).toContain('SRE · Level 2 Ravi Kumar');
   });
 
   it('refuses ranges longer than the gateway lists, without asking it', async () => {
