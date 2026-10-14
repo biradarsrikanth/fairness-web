@@ -93,6 +93,37 @@ describe('AnalyticsPage', () => {
     );
   });
 
+  it("lists each team's own fairness when the page covers several", async () => {
+    const page = await open('/analytics', 'ADMIN');
+    const team = { gini: 0.2, label: 'FAIR', alertCount: 30, engineerCount: 4 };
+    snapshotRequest().flush(
+      snapshot({
+        teamFairness: [
+          { ...team, team: 'SRE' },
+          { ...team, team: 'Payments', gini: 0.61, label: 'CRITICAL', alertCount: 10 },
+        ],
+      }),
+    );
+    await render();
+
+    const rows = Array.from(page.querySelectorAll('app-team-fairness tbody tr')).map((row) =>
+      Array.from(row.querySelectorAll('td')).map((cell) => text(cell).trim()),
+    );
+    expect(rows).toEqual([
+      ['Payments', '0.61', 'Critical', '10', '4'],
+      ['SRE', '0.20', 'Fair', '30', '4'],
+    ]);
+    expect(text(page.querySelector('app-kpi-tiles')!)).toContain('average of 2 teams');
+  });
+
+  it('leaves out the team table for one team', async () => {
+    const page = await open('/analytics?team=SRE');
+    snapshotRequest().flush(snapshot());
+    await render();
+    expect(page.querySelector('app-team-fairness')).toBeNull();
+    expect(text(page.querySelector('app-kpi-tiles')!)).not.toContain('average of');
+  });
+
   it('leaves the defaults to the gateway', async () => {
     await open('/analytics');
     expect(snapshotRequest().request.params.keys()).toEqual([]);

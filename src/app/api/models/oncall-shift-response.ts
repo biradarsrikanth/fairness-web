@@ -8,4 +8,5 @@ export interface OncallShiftResponse {
   escalationLevel: number;
   id: number;
   startsAt: string;
+  team: string;
 }

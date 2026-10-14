@@ -104,6 +104,7 @@ export function snapshot(overrides: Partial<Snapshot> = {}): Snapshot {
       },
     ],
     burnout: [burnout, { ...burnout, engineerId: 4, name: 'Ravi Kumar', score: 20, risk: 'LOW' }],
+    teamFairness: [],
     ...overrides,
   };
 }

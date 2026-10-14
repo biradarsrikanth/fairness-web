@@ -55,6 +55,7 @@ export type { SyncResult } from './models/sync-result';
 export type { SyncRunResponse } from './models/sync-run-response';
 export type { SyncStatusResponse } from './models/sync-status-response';
 export type { TeamAccessRequest } from './models/team-access-request';
+export type { TeamFairness } from './models/team-fairness';
 export type { TeamRef } from './models/team-ref';
 export type { TeamRequest } from './models/team-request';
 export type { TeamResponse } from './models/team-response';

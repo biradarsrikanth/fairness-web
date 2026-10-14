@@ -15,6 +15,7 @@ export interface AuditEntryResponse {
     | 'USER_PASSWORD_RESET'
     | 'USER_UNLOCKED'
     | 'USER_DELETED'
+    | 'ALERT_DELETED'
     | 'SYNC_TRIGGERED'
     | 'INCIDENT_RESOLVED'
     | 'WEBHOOK_REPLAYED'

@@ -115,9 +115,10 @@ function scoreTile(id: string, label: string, scores: ScoresStatus): KpiTile {
 
 /**
  * The tiles across the top of the page. The scorer's figures (Gini, high-risk engineers) show why they're
- * missing when they are; an engineer gets no high-risk count (peers' burnout is private).
+ * missing when they are; an engineer gets no high-risk count (peers' burnout is private). With several teams the
+ * Gini is the average of each team's own, weighted by their alerts, and its note says so.
  */
-export function kpiTiles(summary: Summary): KpiTile[] {
+export function kpiTiles(summary: Summary, teamCount = 1): KpiTile[] {
   const tiles = [
     tile('alerts', 'Alerts', 'count', summary.alerts),
     tile('mtta', 'Time to acknowledge', 'minutes', summary.mttaMinutes, 'Average'),
@@ -128,7 +129,11 @@ export function kpiTiles(summary: Summary): KpiTile[] {
   if (summary.scores.available) {
     if (summary.gini) {
       const label = summary.fairnessLabel ? humanize(summary.fairnessLabel) : null;
-      tiles.push(tile('gini', 'Fairness (Gini)', 'gini', summary.gini, label));
+      const note =
+        teamCount > 1
+          ? [label, `average of ${teamCount} teams`].filter(Boolean).join(' · ')
+          : label;
+      tiles.push(tile('gini', 'Fairness (Gini)', 'gini', summary.gini, note));
     }
     if (summary.highRiskEngineers) {
       tiles.push(

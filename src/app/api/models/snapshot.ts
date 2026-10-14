@@ -5,6 +5,7 @@ import { BurnoutScore } from '../models/burnout-score';
 import { EngineerLoad } from '../models/engineer-load';
 import { Heatmap } from '../models/heatmap';
 import { Summary } from '../models/summary';
+import { TeamFairness } from '../models/team-fairness';
 import { TimeSeries } from '../models/time-series';
 import { TopServices } from '../models/top-services';
 import { Trend } from '../models/trend';
@@ -18,6 +19,7 @@ export interface Snapshot {
   heatmap: Heatmap;
   loadShare: Array<EngineerLoad>;
   summary: Summary;
+  teamFairness: Array<TeamFairness>;
   topServices: TopServices;
   trend: Trend;
 }

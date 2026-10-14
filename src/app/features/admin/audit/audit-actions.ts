@@ -20,6 +20,7 @@ export const AUDIT_ACTIONS: readonly { value: AuditAction; label: string; group:
   { value: 'USER_PASSWORD_RESET', label: "Reset a user's password", group: 'Users' },
   { value: 'USER_UNLOCKED', label: 'Unlocked a user', group: 'Users' },
   { value: 'USER_DELETED', label: 'Deleted a user', group: 'Users' },
+  { value: 'ALERT_DELETED', label: 'Deleted an alert', group: 'Alerts' },
   { value: 'SYNC_TRIGGERED', label: 'Started a PagerDuty sync', group: 'PagerDuty' },
   { value: 'INCIDENT_RESOLVED', label: 'Resolved a PagerDuty incident', group: 'PagerDuty' },
   { value: 'WEBHOOK_REPLAYED', label: 'Replayed a webhook', group: 'PagerDuty' },

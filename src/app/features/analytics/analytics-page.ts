@@ -39,6 +39,7 @@ import { ReportRequest } from '../reports/report-downloads';
 import { FilterBar } from './filter-bar';
 import { KpiTiles } from './kpi-tiles';
 import { scoresUnavailableReason } from './kpis';
+import { TeamFairnessTable } from './team-fairness';
 import { TopServices } from './top-services';
 
 /**
@@ -56,6 +57,7 @@ import { TopServices } from './top-services';
     KpiTiles,
     MatButtonModule,
     MatIconModule,
+    TeamFairnessTable,
     TopServices,
   ],
   templateUrl: './analytics-page.html',

@@ -810,6 +810,7 @@
                 "USER_PASSWORD_RESET",
                 "USER_UNLOCKED",
                 "USER_DELETED",
+                "ALERT_DELETED",
                 "SYNC_TRIGGERED",
                 "INCIDENT_RESOLVED",
                 "WEBHOOK_REPLAYED",
@@ -2575,6 +2576,8 @@
         "tags": [
           "Teams"
         ],
+        "summary": "The teams you can see",
+        "description": "Admins: every team. Managers: their teams. Engineers: their own team.",
         "operationId": "listTeams",
         "responses": {
           "200": {
@@ -4114,6 +4117,12 @@
             "items": {
               "$ref": "#/components/schemas/EngineerLoad"
             }
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamFairness"
+            }
           }
         },
         "required": [
@@ -4123,7 +4132,45 @@
           "engineers",
           "gini",
           "label",
+          "teams",
           "window"
+        ]
+      },
+      "TeamFairness": {
+        "type": "object",
+        "properties": {
+          "team": {
+            "type": "string"
+          },
+          "gini": {
+            "type": "number",
+            "format": "double"
+          },
+          "label": {
+            "type": "string"
+          },
+          "rotationGini": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "alertCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "engineerCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "alertCount",
+          "engineerCount",
+          "gini",
+          "label",
+          "team"
         ]
       },
       "BurnoutComponents": {
@@ -4909,6 +4956,9 @@
           "engineerName": {
             "type": "string"
           },
+          "team": {
+            "type": "string"
+          },
           "escalationLevel": {
             "type": "integer",
             "format": "int32"
@@ -4928,7 +4978,8 @@
           "engineerName",
           "escalationLevel",
           "id",
-          "startsAt"
+          "startsAt",
+          "team"
         ]
       },
       "PageResponseOncallShiftResponse": {
@@ -5050,6 +5101,7 @@
               "USER_PASSWORD_RESET",
               "USER_UNLOCKED",
               "USER_DELETED",
+              "ALERT_DELETED",
               "SYNC_TRIGGERED",
               "INCIDENT_RESOLVED",
               "WEBHOOK_REPLAYED",
@@ -5529,6 +5581,12 @@
             "items": {
               "$ref": "#/components/schemas/BurnoutScore"
             }
+          },
+          "teamFairness": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamFairness"
+            }
           }
         },
         "required": [
@@ -5537,6 +5595,7 @@
           "heatmap",
           "loadShare",
           "summary",
+          "teamFairness",
           "topServices",
           "trend"
         ]

@@ -20,8 +20,10 @@ export class KpiTiles {
   readonly summary = input.required<Summary>();
   /** Values per period for the tiles that have them (by tile id), drawn as a trend line. */
   readonly trends = input<Partial<Record<string, readonly number[]>>>({});
+  /** How many teams the Gini averages */
+  readonly teamCount = input(1);
 
-  protected readonly tiles = computed(() => kpiTiles(this.summary()));
+  protected readonly tiles = computed(() => kpiTiles(this.summary(), this.teamCount()));
   protected readonly previousRange = computed(() => {
     const previous = this.summary().previousWindow;
     return formatRange(previous.start, previous.end);

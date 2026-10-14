@@ -33,7 +33,11 @@
       </div>
     }
 
-    <app-kpi-tiles [summary]="data.summary" [trends]="trends()" />
+    <app-kpi-tiles
+      [summary]="data.summary"
+      [trends]="trends()"
+      [teamCount]="data.teamFairness.length"
+    />
 
     <div class="grid">
       <app-chart-card
@@ -204,6 +208,18 @@
     </div>
 
     <div class="grid">
+      @if (data.teamFairness.length > 1) {
+        <section class="panel" aria-labelledby="team-fairness-heading">
+          <span class="eyebrow bracket">Gini / team</span>
+          <h2 id="team-fairness-heading">Fairness by team</h2>
+          <p class="sub">
+            Each team's engineers compared with each other; the headline is their average, weighted
+            by alerts
+          </p>
+          <app-team-fairness [teams]="data.teamFairness" />
+        </section>
+      }
+
       <section class="panel" aria-labelledby="burnout-heading">
         <span class="eyebrow bracket">Burnout / engineer</span>
         <h2 id="burnout-heading">{{ isEngineer() ? 'Your burnout' : 'Burnout' }}</h2>

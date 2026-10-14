@@ -86,6 +86,11 @@ describe('KPI tiles', () => {
     expect(tiles.some((t) => t.id === 'high-risk')).toBe(false);
   });
 
+  it('says when the Gini averages several teams', () => {
+    const gini = kpiTiles(summary(), 3).find((t) => t.id === 'gini')!;
+    expect(gini.note).toBe('Moderate · average of 3 teams');
+  });
+
   it('leaves out the high-risk count for an engineer', () => {
     const tiles = kpiTiles(summary({ highRiskEngineers: null }));
     expect(tiles.some((t) => t.id === 'high-risk')).toBe(false);

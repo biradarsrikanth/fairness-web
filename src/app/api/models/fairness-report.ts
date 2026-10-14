@@ -3,6 +3,7 @@
 
 import { EngineerLoad } from '../models/engineer-load';
 import { ScoreWindow } from '../models/score-window';
+import { TeamFairness } from '../models/team-fairness';
 export interface FairnessReport {
   alertCount: number;
   basis: string;
@@ -12,5 +13,6 @@ export interface FairnessReport {
   label: string;
   rotationGini?: number | null;
   team?: string | null;
+  teams: Array<TeamFairness>;
   window: ScoreWindow;
 }
