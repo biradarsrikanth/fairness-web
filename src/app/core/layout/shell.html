@@ -33,7 +33,11 @@
         <a
           class="sync off"
           routerLink="/admin/sync"
-          matTooltip="This server doesn't sync PagerDuty on a schedule"
+          [matTooltip]="
+            status.sync()?.configured
+              ? 'This server doesn\'t sync PagerDuty on a schedule'
+              : 'PagerDuty isn\'t set up on this server'
+          "
         >
           <span class="dot off" aria-hidden="true"></span>PagerDuty off
         </a>

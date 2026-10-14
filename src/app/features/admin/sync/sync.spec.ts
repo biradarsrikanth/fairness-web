@@ -30,6 +30,7 @@ const goodRun: SyncRunResponse = {
 
 function status(overrides: Partial<SyncStatusResponse> = {}): SyncStatusResponse {
   return {
+    configured: true,
     scheduled: true,
     intervalSeconds: 3000,
     incidents: { running: false, lastRun: failedRun, lastSuccess: goodRun },
@@ -100,6 +101,21 @@ describe('SyncPage', () => {
     expect(incidents).toContain('Last success');
     expect(oncalls).toContain('Never synced yet.');
     expect(text(element.querySelector('app-webhook-events-table'))).toContain('Replay');
+  });
+
+  it("says PagerDuty isn't set up, with no Sync now buttons, on a server without a token", async () => {
+    const element = await open(
+      status({
+        configured: false,
+        scheduled: false,
+        intervalSeconds: null,
+        incidents: { running: false, lastRun: null, lastSuccess: null },
+      }),
+    );
+    expect(text(element.querySelector('.page-bar'))).toContain('Not set up on this server');
+    expect(text(element.querySelector('.not-set-up'))).toContain("PagerDuty isn't set up");
+    expect(element.querySelectorAll('.kind')).toHaveLength(0);
+    expect(Array.from(element.querySelectorAll('button')).map(text)).not.toContain('Sync now');
   });
 
   it('explains that a sync is already running when the gateway says so', async () => {

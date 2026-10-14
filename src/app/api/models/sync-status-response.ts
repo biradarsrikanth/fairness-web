@@ -7,6 +7,10 @@ import { KindStatus } from '../models/kind-status';
  * The latest sync of each kind, for a "last synced 4 minutes ago" display
  */
 export interface SyncStatusResponse {
+  /**
+   * Whether this server has a PagerDuty API token; without one nothing syncs and the sync endpoints answer 409 PAGERDUTY_NOT_CONFIGURED
+   */
+  configured: boolean;
   incidents: KindStatus;
 
   /**
@@ -16,7 +20,7 @@ export interface SyncStatusResponse {
   oncalls: KindStatus;
 
   /**
-   * Whether this instance runs the scheduled sync
+   * Whether this instance runs the scheduled sync (never without a token)
    */
   scheduled: boolean;
 }

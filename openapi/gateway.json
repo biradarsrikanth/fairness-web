@@ -1558,7 +1558,7 @@
           "PagerDuty"
         ],
         "summary": "Sync incidents now",
-        "description": "Recorded as a sync run. 409 SYNC_IN_PROGRESS while another incident sync is running.",
+        "description": "Recorded as a sync run. 409 SYNC_IN_PROGRESS while another incident sync is running, 409 PAGERDUTY_NOT_CONFIGURED without an API token (nothing recorded).",
         "operationId": "syncIncidents",
         "responses": {
           "200": {
@@ -1771,7 +1771,7 @@
           "PagerDuty"
         ],
         "summary": "Sync on-call shifts now",
-        "description": "Recorded as a sync run. 409 SYNC_IN_PROGRESS while another on-call sync is running.",
+        "description": "Recorded as a sync run. 409 SYNC_IN_PROGRESS while another on-call sync is running, 409 PAGERDUTY_NOT_CONFIGURED without an API token (nothing recorded).",
         "operationId": "syncOncalls",
         "parameters": [
           {
@@ -4709,9 +4709,13 @@
         "type": "object",
         "description": "The latest sync of each kind, for a \"last synced 4 minutes ago\" display",
         "properties": {
+          "configured": {
+            "type": "boolean",
+            "description": "Whether this server has a PagerDuty API token; without one nothing syncs and the sync endpoints answer 409 PAGERDUTY_NOT_CONFIGURED"
+          },
           "scheduled": {
             "type": "boolean",
-            "description": "Whether this instance runs the scheduled sync"
+            "description": "Whether this instance runs the scheduled sync (never without a token)"
           },
           "intervalSeconds": {
             "type": [
@@ -4729,6 +4733,7 @@
           }
         },
         "required": [
+          "configured",
           "incidents",
           "oncalls",
           "scheduled"
@@ -5719,6 +5724,7 @@
               "UNSUPPORTED_MEDIA_TYPE",
               "CONFLICT",
               "SYNC_IN_PROGRESS",
+              "PAGERDUTY_NOT_CONFIGURED",
               "UPSTREAM_ERROR",
               "UPSTREAM_UNAVAILABLE",
               "UPSTREAM_TIMEOUT",

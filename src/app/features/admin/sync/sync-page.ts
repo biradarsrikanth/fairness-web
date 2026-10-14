@@ -131,10 +131,13 @@ export class SyncPage {
         );
       }
     } catch (error) {
+      const code = errorCode(error);
       const message =
-        errorCode(error) === 'SYNC_IN_PROGRESS'
+        code === 'SYNC_IN_PROGRESS'
           ? 'A sync of this kind is already running. Its result shows here when it finishes.'
-          : `The sync failed. ${describeError(error)}`;
+          : code === 'PAGERDUTY_NOT_CONFIGURED'
+            ? "PagerDuty isn't set up on this server, so there's nothing to sync."
+            : `The sync failed. ${describeError(error)}`;
       this.snackBar.open(message, 'Dismiss');
     } finally {
       this.starting.set(null);

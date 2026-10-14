@@ -164,6 +164,7 @@ export class Shell {
   protected readonly syncText = computed(() => {
     const sync = this.status.sync();
     if (!sync) return null;
+    if (!sync.configured) return 'not set up';
     if (this.status.syncOff()) {
       return this.syncAge() ? `off, last synced ${this.syncAge()}` : 'off on this server';
     }

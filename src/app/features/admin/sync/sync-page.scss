@@ -75,3 +75,20 @@ dl {
 .days {
   width: 168px;
 }
+
+.not-set-up {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  h2 {
+    margin: 0;
+    font: 400 20px var(--font-serif);
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 0;
+    max-width: 70ch;
+  }
+}

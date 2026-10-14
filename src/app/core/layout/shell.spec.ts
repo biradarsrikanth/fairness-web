@@ -47,6 +47,7 @@ describe('Shell', () => {
     answer: Summary | null = summary(),
     oncalls: SyncStatusResponse['oncalls'] = { running: false },
     scheduled = true,
+    configured = true,
   ) {
     await signIn(role);
     const fixture = TestBed.createComponent(Shell);
@@ -56,6 +57,7 @@ describe('Shell', () => {
     else request.flush({}, { status: 503, statusText: 'Unavailable' });
     if (role === 'ADMIN') {
       http.expectOne(SYNC_URL).flush({
+        configured,
         scheduled,
         intervalSeconds: scheduled ? 900 : null,
         incidents: {
@@ -176,6 +178,12 @@ describe('Shell', () => {
     expect(element.querySelector('.statusbar')?.textContent).toContain(
       'off, last synced 4 min ago',
     );
+  });
+
+  it('says PagerDuty is not set up on a server without a token', async () => {
+    const { element } = await render('ADMIN', summary(), { running: false }, false, false);
+    expect(element.querySelector('.sync.off')?.textContent).toContain('PagerDuty off');
+    expect(element.querySelector('.statusbar')?.textContent).toContain('PagerDuty not set up');
   });
 
   it('reports a server that stops answering', async () => {
