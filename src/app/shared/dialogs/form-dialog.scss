@@ -20,7 +20,14 @@ mat-form-field {
 .form-error {
   margin: 8px 0 0;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--mat-sys-error-container);
   color: var(--mat-sys-on-error-container);
+}
+
+// A field's message where Material's own error slot can't show it (the engineer search box)
+.field-error {
+  margin: 2px 16px 8px;
+  color: var(--crit-ink);
+  font-size: 12px;
 }

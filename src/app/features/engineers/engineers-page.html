@@ -11,6 +11,11 @@
   </div>
 
   <div class="filters" role="group" aria-label="Filters">
+    <app-search-field
+      placeholder="Name or email"
+      [value]="query()"
+      (searched)="setFilter('q', $event)"
+    />
     @if (teams().length > 1) {
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>Team</mat-label>
@@ -49,7 +54,9 @@
   @if (data(); as page) {
     <section class="panel" [style.opacity]="engineers.isLoading() ? 0.55 : 1">
       @if (page.content.length === 0) {
-        <p class="muted">No engineers here yet.</p>
+        <p class="muted">
+          {{ query() ? 'No engineers match “' + query() + '”.' : 'No engineers here yet.' }}
+        </p>
       } @else {
         <div class="table-scroll">
           <table

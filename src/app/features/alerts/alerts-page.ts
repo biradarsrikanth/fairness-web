@@ -14,6 +14,7 @@ import { AuthService } from '../../core/auth/auth';
 import { describeError } from '../../core/http/api-error';
 import { apiResource } from '../../core/http/api-resource';
 import { DateRangeField, DayRange } from '../../shared/components/date-range-field';
+import { SearchField } from '../../shared/components/search-field';
 import { formatCount, formatInstant, humanize } from '../../shared/format';
 import {
   PAGE_SIZES,
@@ -47,6 +48,7 @@ import { elapsed, localTimeZone, severityClass, statusClass } from './alert-form
     MatSortModule,
     MatTableModule,
     RouterLink,
+    SearchField,
   ],
   templateUrl: './alerts-page.html',
   styleUrl: './alerts-page.scss',
@@ -62,6 +64,7 @@ export class AlertsPage {
   readonly start = input<string>();
   readonly end = input<string>();
   readonly engineerId = input<string>();
+  readonly q = input<string>();
   readonly page = input<string>();
   readonly size = input<string>();
   readonly sort = input<string>();
@@ -74,6 +77,7 @@ export class AlertsPage {
       start: this.start(),
       end: this.end(),
       engineerId: this.engineerId(),
+      q: this.q(),
     }),
   );
   protected readonly list = computed(() =>
@@ -149,6 +153,7 @@ export class AlertsPage {
       start: null,
       end: null,
       engineerId: null,
+      q: null,
       page: null,
     });
   }

@@ -15,6 +15,11 @@
   </header>
 
   <div class="filters" role="group" aria-label="Filters">
+    <app-search-field
+      placeholder="Title, service or incident #"
+      [value]="filter().q"
+      (searched)="setFilter('q', $event)"
+    />
     @if (teams().length > 1) {
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>Team</mat-label>
@@ -88,7 +93,13 @@
       [attr.aria-busy]="alerts.isLoading()"
     >
       @if (page.content.length === 0) {
-        <p class="muted">{{ filtered() ? 'No alerts match these filters.' : 'No alerts yet.' }}</p>
+        <p class="muted">
+          @if (filter().q) {
+            No alerts match “{{ filter().q }}”.
+          } @else {
+            {{ filtered() ? 'No alerts match these filters.' : 'No alerts yet.' }}
+          }
+        </p>
       } @else {
         <div class="table-scroll">
           <table

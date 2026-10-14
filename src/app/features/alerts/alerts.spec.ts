@@ -45,8 +45,16 @@ describe('alert filter', () => {
       start: null,
       end: null,
       engineerId: null,
+      q: null,
     });
     expect(alertApiParams(filter)).toEqual({ team: 'SRE', status: 'resolved' });
+  });
+
+  it('trims the search, caps it at the 100 characters the gateway takes, and sends it', () => {
+    const filter = parseAlertFilter({ q: `  ${'x'.repeat(120)}  ` });
+    expect(filter.q).toHaveLength(100);
+    expect(alertApiParams(parseAlertFilter({ q: ' disk full ' }))).toEqual({ q: 'disk full' });
+    expect(parseAlertFilter({ q: '   ' }).q).toBeNull();
   });
 });
 

@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatAutocompleteHarness } from '@angular/material/autocomplete/testing';
 import { MatInputHarness } from '@angular/material/input/testing';
 import { MatSelectHarness } from '@angular/material/select/testing';
 import { Router } from '@angular/router';
@@ -138,9 +139,9 @@ describe('user dialogs', () => {
     return { fixture, loader: TestbedHarnessEnvironment.loader(fixture) };
   }
 
-  function answerEngineers(team = 'SRE'): void {
+  function answerEngineerSearch(q: string): void {
     const request = http.expectOne((r) => r.url === '/api/v1/engineers');
-    expect(request.request.params.get('team')).toBe(team);
+    expect(request.request.params.get('q')).toBe(q);
     request.flush(
       pageOf([{ id: 4, name: 'Ravi Kumar', team: 'SRE', email: 'ravi@example.com', active: true }]),
     );
@@ -169,19 +170,17 @@ describe('user dialogs', () => {
     await fixture.whenStable();
     expect(text(fixture.nativeElement)).toContain('Pick the engineer this login is for');
 
-    // No engineers are fetched until a team is picked
+    // Nothing is fetched until the admin types
     http.expectNone((r) => r.url === '/api/v1/engineers');
-    const [, team] = await loader.getAllHarnesses(MatSelectHarness);
-    await team.open();
-    // Picking a team starts the engineer request, which the harness waits on: answer it meanwhile
-    const picked = team.clickOptions({ text: 'SRE' });
-    await vi.waitFor(() => answerEngineers('SRE'));
-    await picked;
-    await fixture.whenStable();
-    const [, , engineer] = await loader.getAllHarnesses(MatSelectHarness);
-    await engineer.open();
-    await engineer.clickOptions({ text: /Ravi Kumar/ });
-    const [name, email] = await loader.getAllHarnesses(MatInputHarness);
+    const engineer = await loader.getHarness(MatAutocompleteHarness);
+    await engineer.enterText('ravi');
+    // The search goes out once typing pauses, across every team
+    await vi.waitFor(() => answerEngineerSearch('ravi'));
+    // The panel opened while there were no results yet: open it again, as clicking the field would
+    await engineer.blur();
+    await engineer.focus();
+    await engineer.selectOption({ text: /Ravi Kumar · SRE/ });
+    const [, name, email] = await loader.getAllHarnesses(MatInputHarness);
     expect(await name.getValue()).toBe('Ravi Kumar');
     await email.setValue('ravi@example.com');
     submit.click();
@@ -201,7 +200,7 @@ describe('user dialogs', () => {
     });
   });
 
-  it("opens an engineer's login on their team, with them picked", async () => {
+  it("opens an engineer's login with their engineer shown", async () => {
     const { fixture, loader } = setup(UserDialog, {
       user: { ...manager, role: 'ENGINEER', engineerId: 4 },
     });
@@ -210,12 +209,10 @@ describe('user dialogs', () => {
     http
       .expectOne('/api/v1/engineers/4')
       .flush({ id: 4, name: 'Ravi Kumar', team: 'SRE', email: 'ravi@example.com', active: true });
-    // The team comes from that answer; its engineers are asked for once it lands
-    await vi.waitFor(() => answerEngineers('SRE'));
     await fixture.whenStable();
-    const [, team, engineer] = await loader.getAllHarnesses(MatSelectHarness);
-    expect(await team.getValueText()).toBe('SRE');
-    expect(await engineer.getValueText()).toContain('Ravi Kumar');
+    const engineer = await loader.getHarness(MatAutocompleteHarness);
+    expect(await engineer.getValue()).toBe('Ravi Kumar · SRE');
+    http.expectNone((r) => r.url === '/api/v1/engineers');
   });
 
   it('gives a new manager teams and no engineer', async () => {

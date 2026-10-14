@@ -13,6 +13,8 @@ export interface AlertFilter {
   readonly start: string | null;
   readonly end: string | null;
   readonly engineerId: number | null;
+  /** Free text: title, service, or a PagerDuty incident number */
+  readonly q: string | null;
 }
 
 export const ALERT_LIST = {
@@ -40,6 +42,8 @@ export function parseAlertFilter(params: Params): AlertFilter {
     start,
     end,
     engineerId: Number.isInteger(engineerId) && engineerId > 0 ? engineerId : null,
+    // The gateway takes at most 100 characters
+    q: text('q')?.slice(0, 100) ?? null,
   };
 }
 
@@ -54,6 +58,7 @@ export function alertApiParams(
     ...(filter.start !== null && { start: filter.start }),
     ...(filter.end !== null && { end: filter.end }),
     ...(filter.engineerId !== null && { engineerId: filter.engineerId }),
+    ...(filter.q !== null && { q: filter.q }),
   };
 }
 

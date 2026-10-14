@@ -1,4 +1,4 @@
-import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, linkedSignal, signal } from '@angular/core';
 import {
   FormField,
   email,
@@ -8,6 +8,7 @@ import {
   required,
   submit,
 } from '@angular/forms/signals';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -22,10 +23,15 @@ import {
   listTeams,
   updateUser,
 } from '../../../api/functions';
-import { TemporaryPasswordResponse, UserAccountResponse } from '../../../api/models';
+import {
+  EngineerResponse,
+  TemporaryPasswordResponse,
+  UserAccountResponse,
+} from '../../../api/models';
 import { Role } from '../../../core/auth/auth';
 import { handlesErrors } from '../../../core/http/api-error';
 import { apiResource } from '../../../core/http/api-resource';
+import { SEARCH_DELAY_MS } from '../../../shared/components/search-field';
 import { firstError, serverErrors } from '../../../shared/forms/server-errors';
 
 export interface UserDialogData {
@@ -54,6 +60,7 @@ export const ROLES: readonly { value: Role; label: string; description: string }
 @Component({
   selector: 'app-user-dialog',
   imports: [
+    MatAutocompleteModule,
     FormField,
     MatButtonModule,
     MatCheckboxModule,
@@ -71,25 +78,33 @@ export class UserDialog {
   protected readonly editing = inject<UserDialogData>(MAT_DIALOG_DATA).user;
 
   protected readonly teams = apiResource(listTeams, () => ({}));
-  protected readonly teamNames = computed(() =>
-    (this.teams.value() ?? []).map((team) => team.name).sort((a, b) => a.localeCompare(b)),
-  );
 
-  /** The engineer this login is linked to now, when editing one: it decides the team shown first. */
+  /** The engineer this login is linked to now, when editing one: shown in the search box. */
   private readonly linked = apiResource(getEngineer, () =>
     this.editing?.engineerId ? { id: this.editing.engineerId } : undefined,
   );
-  /**
-   * Engineers are picked within a team: a page holds at most 100 (the gateway's limit), and one team's
-   * engineers always fit, however many the company has.
-   */
-  protected readonly engineerTeam = linkedSignal<string | null>(
-    () => this.linked.value()?.team ?? null,
-  );
-  protected readonly engineers = apiResource(listEngineers, () => {
-    const team = this.engineerTeam();
-    return team ? { team, size: 100, sort: ['name,asc'] } : undefined;
+  /** What's in the engineer box: the picked engineer, or what the admin is typing. */
+  protected readonly engineerText = linkedSignal(() => {
+    const engineer = this.linked.value();
+    return engineer ? engineerLabel(engineer) : '';
   });
+  /** The search sent to the gateway, once typing pauses. Engineers are searched by name or email across every
+   * team, so any of them can be picked however many there are (a page holds at most 100). */
+  protected readonly engineerTerm = signal<string | null>(null);
+  private readonly engineers = apiResource(listEngineers, () => {
+    const term = this.engineerTerm();
+    return term ? { q: term, size: 20, sort: ['name,asc'] } : undefined;
+  });
+  protected readonly engineerMatches = computed(() =>
+    this.engineers.hasValue() ? (this.engineers.value()?.content ?? []) : [],
+  );
+  protected readonly noMatches = computed(
+    () =>
+      this.engineerTerm() !== null &&
+      this.engineers.hasValue() &&
+      this.engineerMatches().length === 0,
+  );
+  private searchTimer: ReturnType<typeof setTimeout> | undefined;
 
   protected readonly model = signal({
     email: this.editing?.email ?? '',
@@ -122,19 +137,31 @@ export class UserDialog {
       (this.model().role !== this.editing.role || (this.editing.enabled && !this.model().enabled)),
   );
 
-  /** A different team: the engineer picked from the old one no longer applies. */
-  protected pickTeam(team: string): void {
-    this.engineerTeam.set(team);
-    if (this.linked.value()?.team !== team) {
-      this.model.update((model) => ({ ...model, engineerId: null }));
-    }
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.searchTimer));
   }
 
-  /** When the full name is empty, picking an engineer fills it in. */
-  protected pickEngineer(id: number | null): void {
-    if (id === null || this.model().fullName.trim()) return;
-    const engineer = this.engineers.value()?.content.find((e) => e.id === id);
-    if (engineer) this.model.update((model) => ({ ...model, fullName: engineer.name }));
+  /** Typing replaces the pick: the login isn't linked until an engineer is chosen from the list. */
+  protected typeEngineer(text: string): void {
+    this.engineerText.set(text);
+    if (this.model().engineerId !== null) {
+      this.model.update((model) => ({ ...model, engineerId: null }));
+    }
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(
+      () => this.engineerTerm.set(text.trim().slice(0, 100) || null),
+      SEARCH_DELAY_MS,
+    );
+  }
+
+  /** Picks the engineer; when the full name is empty, it's filled in with theirs. */
+  protected pickEngineer(engineer: EngineerResponse): void {
+    this.engineerText.set(engineerLabel(engineer));
+    this.model.update((model) => ({
+      ...model,
+      engineerId: engineer.id,
+      fullName: model.fullName.trim() ? model.fullName : engineer.name,
+    }));
   }
 
   protected async save(event: Event): Promise<void> {
@@ -171,4 +198,8 @@ export class UserDialog {
       }
     });
   }
+}
+
+function engineerLabel(engineer: EngineerResponse): string {
+  return `${engineer.name} · ${engineer.team}`;
 }

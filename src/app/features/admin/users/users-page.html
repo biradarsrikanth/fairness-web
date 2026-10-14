@@ -11,17 +11,7 @@
   </div>
 
   <div class="filters" role="group" aria-label="Filters">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search">
-      <mat-label>Search</mat-label>
-      <mat-icon matIconPrefix svgIcon="search" />
-      <input
-        matInput
-        type="search"
-        placeholder="Name or email"
-        [value]="query() ?? ''"
-        (input)="search($any($event.target).value)"
-      />
-    </mat-form-field>
+    <app-search-field placeholder="Name or email" [value]="query()" (searched)="search($event)" />
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Role</mat-label>
       <mat-select [value]="roleFilter() ?? ''" (selectionChange)="setFilter('role', $event.value)">

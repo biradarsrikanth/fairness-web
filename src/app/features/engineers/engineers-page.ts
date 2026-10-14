@@ -17,6 +17,7 @@ import { EngineerResponse, PageResponseEngineerResponse } from '../../api/models
 import { AuthService } from '../../core/auth/auth';
 import { describeError, errorCode, handlesErrors } from '../../core/http/api-error';
 import { apiResource } from '../../core/http/api-resource';
+import { SearchField } from '../../shared/components/search-field';
 import { confirmAction } from '../../shared/dialogs/confirm-dialog';
 import {
   PAGE_SIZES,
@@ -43,6 +44,7 @@ const ENGINEER_LIST = { sortable: ['name', 'email'], defaultSort: 'name,asc' };
     MatSortModule,
     MatTableModule,
     RouterLink,
+    SearchField,
   ],
   templateUrl: './engineers-page.html',
 })
@@ -56,6 +58,7 @@ export class EngineersPage {
   /** Query parameters */
   readonly team = input<string>();
   readonly active = input<string>();
+  readonly q = input<string>();
   readonly page = input<string>();
   readonly size = input<string>();
   readonly sort = input<string>();
@@ -65,6 +68,8 @@ export class EngineersPage {
   protected readonly activeFilter = computed(() =>
     this.active() === 'true' || this.active() === 'false' ? this.active()! : null,
   );
+  /** Name or email; the gateway takes at most 100 characters */
+  protected readonly query = computed(() => this.q()?.trim().slice(0, 100) || null);
   protected readonly list = computed(() =>
     parseListState({ page: this.page(), size: this.size(), sort: this.sort() }, ENGINEER_LIST),
   );
@@ -73,6 +78,7 @@ export class EngineersPage {
   protected readonly engineers = apiResource(listEngineers, () => ({
     ...(this.teamFilter() !== null && { team: this.teamFilter()! }),
     ...(this.activeFilter() !== null && { active: this.activeFilter() === 'true' }),
+    ...(this.query() !== null && { q: this.query()! }),
     ...pagingParams(this.list()),
   }));
   protected readonly data = linkedSignal<
@@ -100,7 +106,7 @@ export class EngineersPage {
   ]);
   protected readonly pageSizes = PAGE_SIZES;
 
-  protected setFilter(key: 'team' | 'active', value: string): void {
+  protected setFilter(key: 'team' | 'active' | 'q', value: string | null): void {
     this.navigate({ [key]: value || null, page: null });
   }
 

@@ -54,6 +54,16 @@ describe('EngineersPage', () => {
     );
   });
 
+  it('searches names and emails, and says when nothing matches', async () => {
+    const element = await open('/engineers?q=%20zed%20');
+    const request = page.http.expectOne((r) => r.url === '/api/v1/engineers');
+    expect(request.request.params.get('q')).toBe('zed');
+    request.flush(pageOf([]));
+    await page.render();
+    expect(text(element.querySelector('.panel'))).toContain('No engineers match “zed”.');
+    expect((element.querySelector('input[type=search]') as HTMLInputElement).value).toBe('zed');
+  });
+
   it("shows the gateway's reason when an engineer can't be removed", async () => {
     await open();
     page.http.expectOne((r) => r.url === '/api/v1/engineers').flush(pageOf([asha]));

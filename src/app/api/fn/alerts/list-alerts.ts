@@ -16,6 +16,7 @@ export interface ListAlerts$Params {
   status?: string;
   start?: string;
   end?: string;
+  q?: string;
 
   /**
    * Zero-based page index (0..N)
@@ -47,6 +48,7 @@ export function listAlerts(
     rb.query('status', params.status, {});
     rb.query('start', params.start, {});
     rb.query('end', params.end, {});
+    rb.query('q', params.q, {});
     rb.query('page', params.page, {});
     rb.query('size', params.size, {});
     rb.query('sort', params.sort, {});

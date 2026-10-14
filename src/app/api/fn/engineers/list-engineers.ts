@@ -12,6 +12,7 @@ import { PageResponseEngineerResponse } from '../../models/page-response-enginee
 export interface ListEngineers$Params {
   team?: string;
   active?: boolean;
+  q?: string;
 
   /**
    * Zero-based page index (0..N)
@@ -39,6 +40,7 @@ export function listEngineers(
   if (params) {
     rb.query('team', params.team, {});
     rb.query('active', params.active, {});
+    rb.query('q', params.q, {});
     rb.query('page', params.page, {});
     rb.query('size', params.size, {});
     rb.query('sort', params.sort, {});

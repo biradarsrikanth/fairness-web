@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, input, linkedSignal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,6 +18,7 @@ import { PageResponseUserAccountResponse, UserAccountResponse } from '../../../a
 import { AuthService, Role } from '../../../core/auth/auth';
 import { describeError, handlesErrors } from '../../../core/http/api-error';
 import { apiResource } from '../../../core/http/api-resource';
+import { SearchField } from '../../../shared/components/search-field';
 import { confirmAction } from '../../../shared/dialogs/confirm-dialog';
 import { formatInstant } from '../../../shared/format';
 import {
@@ -37,7 +38,6 @@ const USER_LIST = {
   sortable: ['email', 'fullName', 'role', 'lastLoginAt'],
   defaultSort: 'email,asc',
 };
-const SEARCH_DELAY_MS = 300;
 
 /** Whether a sign-in lock is still on. */
 export function isLocked(user: UserAccountResponse, now = Date.now()): boolean {
@@ -57,6 +57,7 @@ export function isLocked(user: UserAccountResponse, now = Date.now()): boolean {
     MatSelectModule,
     MatSortModule,
     MatTableModule,
+    SearchField,
   ],
   templateUrl: './users-page.html',
   styleUrl: './users-page.scss',
@@ -112,11 +113,6 @@ export class UsersPage {
   protected readonly isLocked = isLocked;
   protected readonly myId = computed(() => this.auth.user()?.id ?? null);
   private readonly timeZone = localTimeZone();
-  private searchTimer: ReturnType<typeof setTimeout> | undefined;
-
-  constructor() {
-    inject(DestroyRef).onDestroy(() => clearTimeout(this.searchTimer));
-  }
 
   protected roleLabel(role: Role): string {
     return ROLES.find((r) => r.value === role)?.label ?? role;
@@ -126,13 +122,9 @@ export class UsersPage {
     return instant ? formatInstant(instant, this.timeZone) : 'Never';
   }
 
-  /** Searches as the admin types, once they pause. */
-  protected search(value: string): void {
-    clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(
-      () => this.navigate({ q: value.trim() || null, page: null }),
-      SEARCH_DELAY_MS,
-    );
+  /** The search box emits once the admin pauses typing. */
+  protected search(term: string | null): void {
+    this.navigate({ q: term, page: null });
   }
 
   protected setFilter(key: 'role' | 'enabled', value: string): void {
