@@ -30,13 +30,13 @@ import { MAX_REPORT_DAYS, ReportDownloads, ReportFormat, ReportRequest } from '.
         [matMenuTriggerFor]="formats"
         [disabled]="busy() !== null || !!unavailable()"
       >
+        <!-- One node per branch, so the button projects it into its icon slot -->
         @if (busy()) {
-          <mat-spinner diameter="18" aria-hidden="true" />
-          Preparing…
+          <mat-spinner matButtonIcon diameter="18" aria-hidden="true" />
         } @else {
           <mat-icon>download</mat-icon>
-          Export
         }
+        {{ busy() ? 'Preparing…' : 'Export' }}
       </button>
     </span>
     <mat-menu #formats="matMenu" xPosition="before">
