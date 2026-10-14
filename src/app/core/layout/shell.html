@@ -29,7 +29,15 @@
 
   <div class="bar-status">
     @if (status.sync()) {
-      @if (status.syncFailing()) {
+      @if (status.syncOff()) {
+        <a
+          class="sync off"
+          routerLink="/admin/sync"
+          matTooltip="This server doesn't sync PagerDuty on a schedule"
+        >
+          <span class="dot off" aria-hidden="true"></span>PagerDuty off
+        </a>
+      } @else if (status.syncFailing()) {
         <a
           class="sync failing"
           routerLink="/admin/sync"

@@ -46,11 +46,22 @@ export class ShellStatus {
     return times.sort().at(-1) ?? null;
   });
 
-  /** Whether the latest run of either kind failed: a sync that stopped working, whatever succeeded before. */
+  /**
+   * Whether this server doesn't sync PagerDuty on a schedule (no token, or switched off). A manual sync can
+   * still fail there, but that isn't a sync that stopped working, so it isn't flagged.
+   */
+  readonly syncOff = computed(() => {
+    const sync = this.syncValue();
+    return !!sync && !sync.scheduled;
+  });
+
+  /** Whether the latest run of either kind of a scheduled sync failed: it stopped working, whatever succeeded before. */
   readonly syncFailing = computed(() => {
     const sync = this.syncValue();
     return (
-      !!sync && [sync.incidents, sync.oncalls].some((kind) => kind.lastRun?.status === 'FAILED')
+      !!sync &&
+      sync.scheduled &&
+      [sync.incidents, sync.oncalls].some((kind) => kind.lastRun?.status === 'FAILED')
     );
   });
 

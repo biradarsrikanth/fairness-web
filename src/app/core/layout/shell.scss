@@ -98,13 +98,17 @@ kbd {
   white-space: nowrap;
 }
 
-.sync.failing {
-  color: var(--bar-hl);
+.sync.failing,
+.sync.off {
   text-decoration: none;
 
   &:hover {
     text-decoration: underline;
   }
+}
+
+.sync.failing {
+  color: var(--bar-hl);
 }
 
 .dot {
@@ -117,6 +121,11 @@ kbd {
   &.warn {
     background: var(--bar-hl);
     box-shadow: 0 0 0 3px rgb(242 179 61 / 0.2);
+  }
+
+  &.off {
+    background: var(--bar-muted);
+    box-shadow: none;
   }
 }
 

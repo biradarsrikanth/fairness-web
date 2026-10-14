@@ -46,6 +46,7 @@ describe('Shell', () => {
     role: Role,
     answer: Summary | null = summary(),
     oncalls: SyncStatusResponse['oncalls'] = { running: false },
+    scheduled = true,
   ) {
     await signIn(role);
     const fixture = TestBed.createComponent(Shell);
@@ -55,8 +56,8 @@ describe('Shell', () => {
     else request.flush({}, { status: 503, statusText: 'Unavailable' });
     if (role === 'ADMIN') {
       http.expectOne(SYNC_URL).flush({
-        scheduled: true,
-        intervalSeconds: 900,
+        scheduled,
+        intervalSeconds: scheduled ? 900 : null,
         incidents: {
           running: false,
           lastSuccess: {
@@ -155,6 +156,25 @@ describe('Shell', () => {
     expect(element.querySelector('.sync.failing')?.textContent).toContain('PagerDuty sync failing');
     expect(element.querySelector('.statusbar')?.textContent).toContain(
       'failing, last success 4 min ago',
+    );
+  });
+
+  it('shows PagerDuty as off, not failing, when this server has no scheduled sync', async () => {
+    const failedManualRun = {
+      running: false,
+      lastRun: {
+        id: 2,
+        kind: 'ONCALLS',
+        status: 'FAILED',
+        trigger: 'MANUAL',
+        startedAt: new Date().toISOString(),
+      },
+    } satisfies SyncStatusResponse['oncalls'];
+    const { element } = await render('ADMIN', summary(), failedManualRun, false);
+    expect(element.querySelector('.sync.failing')).toBeNull();
+    expect(element.querySelector('.sync.off')?.textContent).toContain('PagerDuty off');
+    expect(element.querySelector('.statusbar')?.textContent).toContain(
+      'off, last synced 4 min ago',
     );
   });
 
