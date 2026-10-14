@@ -4,8 +4,6 @@
 #   docker network create fairness-net   # once per machine, shared with the gateway and the scorer
 #   docker compose up --build
 #   open http://localhost:4280
-#
-# The whole stack with a throwaway database and demo data is in the parent folder's docker-compose.yml.
 name: fairness-web
 
 services:

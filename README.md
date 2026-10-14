@@ -33,9 +33,6 @@ docker network create fairness-net   # once per machine, shared with the gateway
 docker compose up --build            # http://localhost:4280; the gateway runs from its own repo on fairness-net
 ```
 
-For the whole app with a throwaway database holding real incident data, run `docker compose up --build` in the parent
-folder instead (http://localhost:8088).
-
 - `nginx/default.conf.template`: routes, `/healthz` for the container healthcheck, caching (hashed files for a
   year; `index.html`, `theme-boot.js` and the favicon checked on every load, so a release shows at once), gzip
   for the app's files and the gateway's JSON, and 120 s for reports to build.
@@ -56,11 +53,11 @@ XLSX), and finds both in My reports. It fails on any CSP violation, page error o
 
 ```bash
 npx playwright install chromium      # once
-(cd .. && docker compose up --build -d)
+# with the gateway, the scorer and this app running at http://localhost:8088 (or set E2E_BASE_URL)
 npm run e2e                          # report in playwright-report/, traces of failures in test-results/
 ```
 
-`E2E_BASE_URL`, `E2E_EMAIL` and `E2E_PASSWORD` point it at another deployment (default: the demo stack and its
+`E2E_BASE_URL`, `E2E_EMAIL` and `E2E_PASSWORD` point it at another deployment (default: http://localhost:8088 and a
 manager).
 
 ## API client

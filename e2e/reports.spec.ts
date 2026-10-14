@@ -2,7 +2,7 @@ import { Download, Page, expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
 // A manager signs in, reads the analytics page and downloads both reports, which then show in My reports.
-// Defaults are the demo stack's manager (docker-compose.yml in the parent folder).
+// The sign-in defaults to a manager of the local stack at http://localhost:8088.
 const email = process.env['E2E_EMAIL'] ?? 'manager@example.com';
 const password = process.env['E2E_PASSWORD'] ?? 'Demo-Manager-2026';
 
