@@ -17,6 +17,15 @@
 
     @if (!userForm.engineerId().hidden()) {
       <mat-form-field appearance="outline">
+        <mat-label>Engineer's team</mat-label>
+        <mat-select [value]="engineerTeam()" (selectionChange)="pickTeam($event.value)">
+          @for (team of teamNames(); track team) {
+            <mat-option [value]="team">{{ team }}</mat-option>
+          }
+        </mat-select>
+        <mat-hint>Then pick the engineer from that team</mat-hint>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
         <mat-label>Engineer</mat-label>
         <mat-select
           [formField]="userForm.engineerId"

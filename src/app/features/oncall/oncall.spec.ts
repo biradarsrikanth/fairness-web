@@ -123,3 +123,57 @@ describe('OncallPage', () => {
     page.http.match((r) => r.url === '/api/v1/oncall');
   });
 });
+
+describe('on-call engineer filter across several teams', () => {
+  let page: PageTest;
+
+  beforeEach(async () => {
+    page = await pageTest([route('oncall', OncallPage)]);
+    await signIn('ADMIN', {
+      user: {
+        teams: [
+          { id: 1, name: 'SRE' },
+          { id: 2, name: 'Platform' },
+        ],
+      },
+    });
+  });
+
+  afterEach(() => page.http.verify());
+
+  function answerShifts(): void {
+    page.http.match((r) => r.url === '/api/v1/oncall').forEach((r) => r.flush(pageOf([])));
+  }
+
+  it('lists no engineers until a team is picked', async () => {
+    await page.harness.navigateByUrl('/oncall');
+    await page.render();
+    answerShifts();
+    await page.render();
+    page.http.expectNone((r) => r.url.startsWith('/api/v1/engineers'));
+  });
+
+  it("shows a linked engineer's team, and lists only that team", async () => {
+    await page.harness.navigateByUrl('/oncall?engineerId=4');
+    await page.render();
+    answerShifts();
+    page.http
+      .expectOne('/api/v1/engineers/4')
+      .flush({ id: 4, name: 'Ravi Kumar', team: 'Platform', email: 'r@example.com', active: true });
+    await page.render();
+    const list = page.http.expectOne((r) => r.url === '/api/v1/engineers');
+    expect(list.request.params.get('team')).toBe('Platform');
+    list.flush(pageOf([]));
+    await page.render();
+
+    const component = page.harness.routeDebugElement!.componentInstance as {
+      setTeam(team: string): void;
+    };
+    component.setTeam('SRE');
+    await page.render();
+    // A new team drops the engineer picked from the old one
+    expect(TestBed.inject(Router).url).toBe('/oncall?team=SRE');
+    answerShifts();
+    page.http.expectOne((r) => r.url === '/api/v1/engineers').flush(pageOf([]));
+  });
+});

@@ -7,8 +7,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { Params, Router, RouterLink } from '@angular/router';
-import { listEngineers, listOncallShifts } from '../../api/functions';
+import { getEngineer, listEngineers, listOncallShifts } from '../../api/functions';
 import { PageResponseOncallShiftResponse } from '../../api/models';
+import { AuthService } from '../../core/auth/auth';
 import { describeError } from '../../core/http/api-error';
 import { apiResource } from '../../core/http/api-resource';
 import { DateRangeField, DayRange } from '../../shared/components/date-range-field';
@@ -53,11 +54,14 @@ const SHIFT_LIST = { sortable: ['startsAt', 'endsAt'], defaultSort: 'startsAt,as
 })
 export class OncallPage {
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
   /** Query parameters */
   readonly start = input<string>();
   readonly end = input<string>();
   readonly engineerId = input<string>();
+  /** Only narrows the engineer picker; shifts aren't listed by team */
+  readonly team = input<string>();
   readonly page = input<string>();
   readonly size = input<string>();
   readonly sort = input<string>();
@@ -106,11 +110,27 @@ export class OncallPage {
       : null,
   );
 
-  /** For the engineer filter: the engineers the user may see */
-  protected readonly engineers = apiResource(listEngineers, () => ({
-    size: 100,
-    sort: ['name,asc'],
-  }));
+  /** The user's teams, for the team picker that narrows the engineer filter. */
+  protected readonly myTeams = computed(() =>
+    (this.auth.user()?.teams ?? []).map((team) => team.name).sort((a, b) => a.localeCompare(b)),
+  );
+  /** An engineer in the URL without a team: their team, so the picker can show them. */
+  private readonly filtered = apiResource(getEngineer, () => {
+    const id = this.engineer();
+    return id !== null && !this.team() && this.myTeams().length > 1 ? { id } : undefined;
+  });
+  protected readonly engineerTeam = computed(() => {
+    const teams = this.myTeams();
+    return this.team() ?? (teams.length === 1 ? teams[0] : (this.filtered.value()?.team ?? null));
+  });
+  /**
+   * For the engineer filter: the engineers of one team. A page holds at most 100 (the gateway's limit) and
+   * one team always fits, however many engineers the company has.
+   */
+  protected readonly engineers = apiResource(listEngineers, () => {
+    const team = this.engineerTeam();
+    return team ? { team, size: 100, sort: ['name,asc'] } : undefined;
+  });
 
   protected readonly columns = ['engineer', 'level', 'startsAt', 'endsAt', 'length'];
   protected readonly pageSizes = PAGE_SIZES;
@@ -127,6 +147,10 @@ export class OncallPage {
 
   protected setRange(range: DayRange): void {
     this.navigate({ start: range.start, end: range.end, page: null });
+  }
+
+  protected setTeam(team: string): void {
+    this.navigate({ team: team || null, engineerId: null, page: null });
   }
 
   protected setEngineer(id: string): void {

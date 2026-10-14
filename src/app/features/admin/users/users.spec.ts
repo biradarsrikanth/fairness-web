@@ -138,14 +138,15 @@ describe('user dialogs', () => {
     return { fixture, loader: TestbedHarnessEnvironment.loader(fixture) };
   }
 
+  function answerEngineers(team = 'SRE'): void {
+    const request = http.expectOne((r) => r.url === '/api/v1/engineers');
+    expect(request.request.params.get('team')).toBe(team);
+    request.flush(
+      pageOf([{ id: 4, name: 'Ravi Kumar', team: 'SRE', email: 'ravi@example.com', active: true }]),
+    );
+  }
+
   function answerLists(): void {
-    http
-      .expectOne((r) => r.url === '/api/v1/engineers')
-      .flush(
-        pageOf([
-          { id: 4, name: 'Ravi Kumar', team: 'SRE', email: 'ravi@example.com', active: true },
-        ]),
-      );
     http.expectOne('/api/v1/teams').flush([
       { id: 1, name: 'SRE', timezone: 'Asia/Kolkata' },
       { id: 2, name: 'Platform', timezone: 'Asia/Kolkata' },
@@ -168,7 +169,16 @@ describe('user dialogs', () => {
     await fixture.whenStable();
     expect(text(fixture.nativeElement)).toContain('Pick the engineer this login is for');
 
-    const [, engineer] = await loader.getAllHarnesses(MatSelectHarness);
+    // No engineers are fetched until a team is picked
+    http.expectNone((r) => r.url === '/api/v1/engineers');
+    const [, team] = await loader.getAllHarnesses(MatSelectHarness);
+    await team.open();
+    // Picking a team starts the engineer request, which the harness waits on: answer it meanwhile
+    const picked = team.clickOptions({ text: 'SRE' });
+    await vi.waitFor(() => answerEngineers('SRE'));
+    await picked;
+    await fixture.whenStable();
+    const [, , engineer] = await loader.getAllHarnesses(MatSelectHarness);
     await engineer.open();
     await engineer.clickOptions({ text: /Ravi Kumar/ });
     const [name, email] = await loader.getAllHarnesses(MatInputHarness);
@@ -189,6 +199,23 @@ describe('user dialogs', () => {
     expect(close).toHaveBeenCalledWith({
       created: expect.objectContaining({ temporaryPassword: 'Tmp-1' }),
     });
+  });
+
+  it("opens an engineer's login on their team, with them picked", async () => {
+    const { fixture, loader } = setup(UserDialog, {
+      user: { ...manager, role: 'ENGINEER', engineerId: 4 },
+    });
+    await settle();
+    answerLists();
+    http
+      .expectOne('/api/v1/engineers/4')
+      .flush({ id: 4, name: 'Ravi Kumar', team: 'SRE', email: 'ravi@example.com', active: true });
+    // The team comes from that answer; its engineers are asked for once it lands
+    await vi.waitFor(() => answerEngineers('SRE'));
+    await fixture.whenStable();
+    const [, team, engineer] = await loader.getAllHarnesses(MatSelectHarness);
+    expect(await team.getValueText()).toBe('SRE');
+    expect(await engineer.getValueText()).toContain('Ravi Kumar');
   });
 
   it('gives a new manager teams and no engineer', async () => {

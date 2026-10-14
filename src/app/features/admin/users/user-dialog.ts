@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import {
   FormField,
   email,
@@ -15,7 +15,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Api } from '../../../api/api';
-import { createUser, listEngineers, listTeams, updateUser } from '../../../api/functions';
+import {
+  createUser,
+  getEngineer,
+  listEngineers,
+  listTeams,
+  updateUser,
+} from '../../../api/functions';
 import { TemporaryPasswordResponse, UserAccountResponse } from '../../../api/models';
 import { Role } from '../../../core/auth/auth';
 import { handlesErrors } from '../../../core/http/api-error';
@@ -64,11 +70,26 @@ export class UserDialog {
   private readonly ref = inject<MatDialogRef<UserDialog, UserDialogResult>>(MatDialogRef);
   protected readonly editing = inject<UserDialogData>(MAT_DIALOG_DATA).user;
 
-  protected readonly engineers = apiResource(listEngineers, () => ({
-    size: 100,
-    sort: ['name,asc'],
-  }));
   protected readonly teams = apiResource(listTeams, () => ({}));
+  protected readonly teamNames = computed(() =>
+    (this.teams.value() ?? []).map((team) => team.name).sort((a, b) => a.localeCompare(b)),
+  );
+
+  /** The engineer this login is linked to now, when editing one: it decides the team shown first. */
+  private readonly linked = apiResource(getEngineer, () =>
+    this.editing?.engineerId ? { id: this.editing.engineerId } : undefined,
+  );
+  /**
+   * Engineers are picked within a team: a page holds at most 100 (the gateway's limit), and one team's
+   * engineers always fit, however many the company has.
+   */
+  protected readonly engineerTeam = linkedSignal<string | null>(
+    () => this.linked.value()?.team ?? null,
+  );
+  protected readonly engineers = apiResource(listEngineers, () => {
+    const team = this.engineerTeam();
+    return team ? { team, size: 100, sort: ['name,asc'] } : undefined;
+  });
 
   protected readonly model = signal({
     email: this.editing?.email ?? '',
@@ -100,6 +121,14 @@ export class UserDialog {
       this.editing !== undefined &&
       (this.model().role !== this.editing.role || (this.editing.enabled && !this.model().enabled)),
   );
+
+  /** A different team: the engineer picked from the old one no longer applies. */
+  protected pickTeam(team: string): void {
+    this.engineerTeam.set(team);
+    if (this.linked.value()?.team !== team) {
+      this.model.update((model) => ({ ...model, engineerId: null }));
+    }
+  }
 
   /** When the full name is empty, picking an engineer fills it in. */
   protected pickEngineer(id: number | null): void {

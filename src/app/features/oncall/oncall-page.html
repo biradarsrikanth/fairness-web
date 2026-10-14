@@ -1,6 +1,9 @@
 <div class="page">
   <div class="page-bar">
-    <h1>On-call</h1>
+    <div>
+      <span class="eyebrow">Monitor / <b>On-call</b></span>
+      <h1>On-call</h1>
+    </div>
   </div>
 
   <section class="panel now" aria-labelledby="now-heading">
@@ -32,6 +35,17 @@
       [range]="{ start: range().start, end: range().end }"
       (rangeChange)="setRange($event)"
     />
+    @if (myTeams().length > 1) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Team</mat-label>
+        <mat-select [value]="engineerTeam() ?? ''" (selectionChange)="setTeam($event.value)">
+          <mat-option value="">Every team</mat-option>
+          @for (name of myTeams(); track name) {
+            <mat-option [value]="name">{{ name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
     @if (engineers.hasValue() && engineers.value()!.content.length > 1) {
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>Engineer</mat-label>
@@ -50,12 +64,12 @@
 
   @if (tooLong()) {
     <div class="page-problem" role="alert">
-      <mat-icon aria-hidden="true">error</mat-icon>
+      <mat-icon aria-hidden="true" svgIcon="error" />
       <span>Pick an end date at most {{ maxDays }} days after the start.</span>
     </div>
   } @else if (error()) {
     <div class="page-problem" role="alert">
-      <mat-icon aria-hidden="true">error</mat-icon>
+      <mat-icon aria-hidden="true" svgIcon="error" />
       <span>Couldn't load shifts. {{ error() }}</span>
       <button matButton type="button" (click)="shifts.reload()">Try again</button>
     </div>
