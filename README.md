@@ -33,7 +33,7 @@ docker network create fairness-net   # once per machine, shared with the gateway
 docker compose up --build            # http://localhost:4280; the gateway runs from its own repo on fairness-net
 ```
 
-For the whole app with a throwaway database and made-up data, run `docker compose up --build` in the parent
+For the whole app with a throwaway database holding real incident data, run `docker compose up --build` in the parent
 folder instead (http://localhost:8088).
 
 - `nginx/default.conf.template`: routes, `/healthz` for the container healthcheck, caching (hashed files for a
