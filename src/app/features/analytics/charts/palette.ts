@@ -102,7 +102,3 @@ export const CONSOLE: ChartPalette = {
 export function chartPalette(mode: ThemeMode): ChartPalette {
   return mode === 'console' ? CONSOLE : PAPER;
 }
-
-/** Paper's severity colours, for code that needs a fixed key list. */
-export const SEVERITY_COLORS = PAPER.severity;
-export const EMPTY_CELL = PAPER.emptyCell;

@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -6,12 +6,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
 import { listReportExports } from '../../api/functions';
-import { PageResponseReportExportResponse, ReportExportResponse } from '../../api/models';
+import { ReportExportResponse } from '../../api/models';
 import { describeError } from '../../core/http/api-error';
-import { apiResource } from '../../core/http/api-resource';
-import { formatInstant, formatRange } from '../../shared/format';
-import { PAGE_SIZES, parseListState } from '../../shared/list/list-state';
-import { localTimeZone } from '../alerts/alert-format';
+import { apiResource, keepLast } from '../../core/http/api-resource';
+import { formatDuration, formatLocal, formatRange } from '../../shared/format';
+import { PAGE_SIZES, pageChange, parseListState } from '../../shared/list/list-state';
 import { ReportDownloads, ReportFormat, ReportRequest } from './report-downloads';
 
 /** 512 KB, 1.2 MB */
@@ -65,13 +64,7 @@ export class ExportsPage {
     page: this.list().page,
     size: this.list().size,
   }));
-  protected readonly data = linkedSignal<
-    PageResponseReportExportResponse | undefined,
-    PageResponseReportExportResponse | undefined
-  >({
-    source: () => (this.exports.hasValue() ? this.exports.value() : undefined),
-    computation: (value, previous) => value ?? previous?.value,
-  });
+  protected readonly data = keepLast(this.exports);
   protected readonly error = computed(() => {
     const error = this.exports.error();
     return error ? describeError(error) : null;
@@ -83,23 +76,12 @@ export class ExportsPage {
   protected readonly subject = exportSubject;
   protected readonly repeatRequest = repeatRequest;
   protected readonly formatRange = formatRange;
-  private readonly timeZone = localTimeZone();
-
-  protected when(instant: string): string {
-    return formatInstant(instant, this.timeZone);
-  }
-
-  protected took(ms: number | null | undefined): string {
-    if (ms === null || ms === undefined) return '–';
-    return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
-  }
+  protected readonly took = formatDuration;
+  protected readonly when = formatLocal;
 
   protected paged(event: PageEvent): void {
     void this.router.navigate([], {
-      queryParams: {
-        page: event.pageIndex || null,
-        size: event.pageSize === 20 ? null : event.pageSize,
-      },
+      queryParams: pageChange(this.list(), event, EXPORT_LIST),
       queryParamsHandling: 'merge',
     });
   }

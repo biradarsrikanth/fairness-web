@@ -4,7 +4,7 @@ import { PageTest, pageOf, pageTest, route, text } from '../../../../testing/pag
 import { settle, signIn } from '../../../../testing/session';
 import { SyncRunResponse, SyncStatusResponse } from '../../../api/models';
 import { SyncPage } from './sync-page';
-import { ago, duration, runOutcome } from './sync-format';
+import { runOutcome } from './sync-format';
 
 const failedRun: SyncRunResponse = {
   id: 41,
@@ -40,16 +40,6 @@ function status(overrides: Partial<SyncStatusResponse> = {}): SyncStatusResponse
 }
 
 describe('sync formatting', () => {
-  it('says how long ago and how long', () => {
-    const now = Date.parse('2026-10-13T12:00:00Z');
-    expect(ago('2026-10-13T11:59:30Z', now)).toBe('just now');
-    expect(ago('2026-10-13T11:56:00Z', now)).toBe('4 minutes ago');
-    expect(ago('2026-10-12T11:00:00Z', now)).toBe('1 day ago');
-    expect(duration(850)).toBe('850 ms');
-    expect(duration(12_400)).toBe('12.4 s');
-    expect(duration(185_000)).toBe('3 min 5 s');
-  });
-
   it('describes what a run changed', () => {
     expect(runOutcome(goodRun)).toBe('3 new, 1 updated');
     expect(runOutcome({ ...goodRun, createdCount: 0, updatedCount: 0 })).toBe('No changes');
@@ -96,7 +86,7 @@ describe('SyncPage', () => {
     const element = await open();
     expect(text(element.querySelector('.page-bar'))).toContain('Scheduled every 50 minutes');
     const [incidents, oncalls] = Array.from(element.querySelectorAll('.kind')).map(text);
-    expect(incidents).toContain('Failed 4 minutes ago');
+    expect(incidents).toContain('Failed 4 min ago');
     expect(incidents).toContain('PagerDuty answered 401');
     expect(incidents).toContain('Last success');
     expect(oncalls).toContain('Never synced yet.');

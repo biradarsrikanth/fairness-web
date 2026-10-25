@@ -1,4 +1,4 @@
-import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,12 +9,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Api } from '../../../api/api';
 import { listWebhookEvents, replayWebhookEvent } from '../../../api/functions';
 import { ListWebhookEvents$Params } from '../../../api/fn/pager-duty-sync-activity/list-webhook-events';
-import { PageResponseWebhookEventResponse, WebhookEventResponse } from '../../../api/models';
+import { WebhookEventResponse } from '../../../api/models';
 import { describeError, handlesErrors } from '../../../core/http/api-error';
-import { apiResource } from '../../../core/http/api-resource';
-import { formatInstant } from '../../../shared/format';
-import { localTimeZone } from '../../alerts/alert-format';
-import { label } from './sync-format';
+import { apiResource, keepLast } from '../../../core/http/api-resource';
+import { formatLocal, humanize } from '../../../shared/format';
 import { WebhookPayloadDialog } from './webhook-payload-dialog';
 
 /** The gateway applies these again on request (PROCESSED and IGNORED ones are done). */
@@ -128,24 +126,14 @@ export class WebhookEventsTable {
     if (this.status()) params.status = this.status() as ListWebhookEvents$Params['status'];
     return params;
   });
-  protected readonly data = linkedSignal<
-    PageResponseWebhookEventResponse | undefined,
-    PageResponseWebhookEventResponse | undefined
-  >({
-    source: () => (this.events.hasValue() ? this.events.value() : undefined),
-    computation: (value, previous) => value ?? previous?.value,
-  });
+  protected readonly data = keepLast(this.events);
   protected readonly error = computed(() => {
     const error = this.events.error();
     return error ? describeError(error) : null;
   });
 
-  protected readonly label = label;
-  private readonly timeZone = localTimeZone();
-
-  protected when(instant: string): string {
-    return formatInstant(instant, this.timeZone);
-  }
+  protected readonly label = humanize;
+  protected readonly when = formatLocal;
 
   protected shorten(error: string): string {
     return error.length > 60 ? `${error.slice(0, 60)}…` : error;
@@ -177,7 +165,7 @@ export class WebhookEventsTable {
           ? 'Applied.'
           : result.status === 'FAILED'
             ? `It failed again: ${result.error ?? 'no reason given'}.`
-            : `It is ${label(result.status).toLowerCase()} now.`;
+            : `It is ${humanize(result.status).toLowerCase()} now.`;
       this.snackBar.open(`Replayed ${event.eventType}. ${outcome}`, 'OK', { duration: 8000 });
       this.events.reload();
     } catch (error) {

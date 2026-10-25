@@ -1,17 +1,17 @@
-import { Component, computed, inject, input, linkedSignal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import type { ECElementEvent } from 'echarts/core';
 import { getAnalyticsSnapshot } from '../../api/functions';
-import { Snapshot } from '../../api/models';
 import { AuthService } from '../../core/auth/auth';
 import { describeError } from '../../core/http/api-error';
 import { ThemeService } from '../../core/theme/theme';
-import { apiResource } from '../../core/http/api-resource';
+import { apiResource, keepLast } from '../../core/http/api-resource';
 import { formatPct, formatRange, humanize } from '../../shared/format';
 import {
   AnalyticsFilter,
+  linkParams,
   parseFilter,
   sameFilter,
   teamOptions,
@@ -88,7 +88,7 @@ export class AnalyticsPage {
   );
   /** For links to an engineer: this filter, with the dates on screen so both pages cover the same days. */
   protected readonly engineerParams = computed(() => {
-    const params = clean(toQueryParams(this.filter()));
+    const params = linkParams(this.filter());
     const window = this.data()?.summary.window;
     return window ? { ...params, start: window.start, end: window.end } : params;
   });
@@ -100,10 +100,7 @@ export class AnalyticsPage {
   protected readonly snapshot = apiResource(getAnalyticsSnapshot, () => toApiParams(this.filter()));
 
   /** The last loaded snapshot, kept on screen (dimmed) while the next one loads. */
-  protected readonly data = linkedSignal<Snapshot | undefined, Snapshot | undefined>({
-    source: () => (this.snapshot.hasValue() ? this.snapshot.value() : undefined),
-    computation: (value, previous) => value ?? previous?.value,
-  });
+  protected readonly data = keepLast(this.snapshot);
   protected readonly error = computed(() => {
     const error = this.snapshot.error();
     return error ? describeError(error) : null;
@@ -215,13 +212,4 @@ export class AnalyticsPage {
   protected granularityText(granularity: string): string {
     return { day: 'per day', week: 'per week', month: 'per month' }[granularity] ?? '';
   }
-}
-
-/** Query parameters without the empty ones, for links. */
-function clean(params: Record<string, unknown>): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(params).filter(
-      (entry): entry is [string, string] => typeof entry[1] === 'string',
-    ),
-  );
 }

@@ -25,9 +25,9 @@ import {
 } from '../../shared/format';
 import {
   AnalyticsFilter,
+  linkParams,
   parseFilter,
   toApiParams,
-  toQueryParams,
   windowDays,
 } from './analytics-filter';
 import { burnoutBreakdown, burnoutConfidence } from './burnout-breakdown';
@@ -160,10 +160,7 @@ export class EngineerPage {
     const counts = this.data()?.timeOfDay;
     return counts ? DAY_PARTS.reduce((sum, part) => sum + counts[part.key], 0) : 0;
   });
-  protected readonly backParams = computed(() => {
-    const params = toQueryParams(this.filter());
-    return Object.fromEntries(Object.entries(params).filter(([, value]) => value !== null));
-  });
+  protected readonly backParams = computed(() => linkParams(this.filter()));
 
   protected readonly dayParts = DAY_PARTS;
   protected readonly formatMinutes = formatMinutes;

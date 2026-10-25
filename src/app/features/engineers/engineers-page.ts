@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, linkedSignal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,18 +13,18 @@ import { Params, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Api } from '../../api/api';
 import { deleteEngineer, listEngineers, updateEngineer } from '../../api/functions';
-import { EngineerResponse, PageResponseEngineerResponse } from '../../api/models';
+import { EngineerResponse } from '../../api/models';
 import { AuthService } from '../../core/auth/auth';
 import { describeError, errorCode, handlesErrors } from '../../core/http/api-error';
-import { apiResource } from '../../core/http/api-resource';
+import { apiResource, keepLast } from '../../core/http/api-resource';
 import { SearchField } from '../../shared/components/search-field';
 import { confirmAction } from '../../shared/dialogs/confirm-dialog';
 import {
   PAGE_SIZES,
-  listQueryParams,
   matSort,
   pagingParams,
   parseListState,
+  pageChange,
   sortChange,
 } from '../../shared/list/list-state';
 import { EngineerDialog, EngineerDialogData } from './engineer-dialog';
@@ -81,13 +81,7 @@ export class EngineersPage {
     ...(this.query() !== null && { q: this.query()! }),
     ...pagingParams(this.list()),
   }));
-  protected readonly data = linkedSignal<
-    PageResponseEngineerResponse | undefined,
-    PageResponseEngineerResponse | undefined
-  >({
-    source: () => (this.engineers.hasValue() ? this.engineers.value() : undefined),
-    computation: (value, previous) => value ?? previous?.value,
-  });
+  protected readonly data = keepLast(this.engineers);
   protected readonly error = computed(() => {
     const error = this.engineers.error();
     return error ? describeError(error) : null;
@@ -115,12 +109,7 @@ export class EngineersPage {
   }
 
   protected paged(event: PageEvent): void {
-    this.navigate(
-      listQueryParams(
-        { ...this.list(), page: event.pageIndex, size: event.pageSize },
-        ENGINEER_LIST,
-      ),
-    );
+    this.navigate(pageChange(this.list(), event, ENGINEER_LIST));
   }
 
   protected async edit(engineer?: EngineerResponse): Promise<void> {

@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, linkedSignal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,19 +9,18 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { Params, Router, RouterLink } from '@angular/router';
 import { listAlerts } from '../../api/functions';
-import { PageResponseAlertResponse } from '../../api/models';
 import { AuthService } from '../../core/auth/auth';
 import { describeError } from '../../core/http/api-error';
-import { apiResource } from '../../core/http/api-resource';
+import { apiResource, keepLast } from '../../core/http/api-resource';
 import { DateRangeField, DayRange } from '../../shared/components/date-range-field';
 import { SearchField } from '../../shared/components/search-field';
-import { formatCount, formatInstant, humanize } from '../../shared/format';
+import { formatCount, formatLocal, humanize } from '../../shared/format';
 import {
   PAGE_SIZES,
-  listQueryParams,
   matSort,
   pagingParams,
   parseListState,
+  pageChange,
   sortChange,
 } from '../../shared/list/list-state';
 import {
@@ -32,7 +31,7 @@ import {
   hasFilters,
   parseAlertFilter,
 } from './alert-filter';
-import { elapsed, localTimeZone, severityClass, statusClass } from './alert-format';
+import { elapsed, severityClass, statusClass } from './alert-format';
 
 /** Every alert the user may see, newest first, filtered and paged through the URL. */
 @Component({
@@ -90,13 +89,7 @@ export class AlertsPage {
     ...pagingParams(this.list()),
   }));
   /** The last page loaded, kept (dimmed) while the next one loads. */
-  protected readonly data = linkedSignal<
-    PageResponseAlertResponse | undefined,
-    PageResponseAlertResponse | undefined
-  >({
-    source: () => (this.alerts.hasValue() ? this.alerts.value() : undefined),
-    computation: (value, previous) => value ?? previous?.value,
-  });
+  protected readonly data = keepLast(this.alerts);
   protected readonly error = computed(() => {
     const error = this.alerts.error();
     return error ? describeError(error) : null;
@@ -130,11 +123,7 @@ export class AlertsPage {
   protected readonly total = formatCount;
   protected readonly severityClass = severityClass;
   protected readonly statusClass = statusClass;
-  private readonly timeZone = localTimeZone();
-
-  protected when(instant: string): string {
-    return formatInstant(instant, this.timeZone);
-  }
+  protected readonly when = formatLocal;
 
   /** '' is "any" in the selects; mat-select treats null as no selection. */
   protected setFilter(key: string, value: string | null): void {
@@ -163,9 +152,7 @@ export class AlertsPage {
   }
 
   protected paged(event: PageEvent): void {
-    this.navigate(
-      listQueryParams({ ...this.list(), page: event.pageIndex, size: event.pageSize }, ALERT_LIST),
-    );
+    this.navigate(pageChange(this.list(), event, ALERT_LIST));
   }
 
   protected open(id: number): void {

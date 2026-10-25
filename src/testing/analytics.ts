@@ -2,6 +2,10 @@ import { Component, input, output } from '@angular/core';
 import { EngineerReport, Snapshot } from '../app/api/models';
 
 const window = { start: '2026-09-14', end: '2026-10-13', timezone: 'Asia/Kolkata' };
+/** "Sep" or "Sept": the short month differs between ICU versions. */
+export const SEP = new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' }).format(
+  new Date('2026-09-01T00:00:00Z'),
+);
 const none = { p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, other: 0 };
 
 const burnout = {

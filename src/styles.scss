@@ -226,12 +226,6 @@ body {
 
 // ---------- type helpers ----------
 
-.serif {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-}
-
 .mono {
   font-family: var(--font-mono);
 }
@@ -339,8 +333,7 @@ body {
   white-space: nowrap;
 }
 
-.num,
-.tabular {
+.num {
   font-variant-numeric: tabular-nums;
 }
 

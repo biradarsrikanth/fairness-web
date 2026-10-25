@@ -1,4 +1,4 @@
-import { Component, computed, input, linkedSignal, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -6,12 +6,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { listSyncRuns } from '../../../api/functions';
 import { ListSyncRuns$Params } from '../../../api/fn/pager-duty-sync-activity/list-sync-runs';
-import { PageResponseSyncRunResponse } from '../../../api/models';
 import { describeError } from '../../../core/http/api-error';
-import { apiResource } from '../../../core/http/api-resource';
-import { formatInstant } from '../../../shared/format';
-import { localTimeZone } from '../../alerts/alert-format';
-import { KIND_LABELS, duration, label, runOutcome } from './sync-format';
+import { apiResource, keepLast } from '../../../core/http/api-resource';
+import { formatDuration, formatLocal, humanize } from '../../../shared/format';
+import { KIND_LABELS, runOutcome } from './sync-format';
 
 /** Every sync, newest first, scheduled and manual. */
 @Component({
@@ -122,27 +120,17 @@ export class SyncRunsTable {
     if (this.status()) params.status = this.status() as ListSyncRuns$Params['status'];
     return params;
   });
-  protected readonly data = linkedSignal<
-    PageResponseSyncRunResponse | undefined,
-    PageResponseSyncRunResponse | undefined
-  >({
-    source: () => (this.runs.hasValue() ? this.runs.value() : undefined),
-    computation: (value, previous) => value ?? previous?.value,
-  });
+  protected readonly data = keepLast(this.runs);
   protected readonly error = computed(() => {
     const error = this.runs.error();
     return error ? describeError(error) : null;
   });
 
   protected readonly kindLabels = KIND_LABELS;
-  protected readonly label = label;
+  protected readonly label = humanize;
   protected readonly runOutcome = runOutcome;
-  protected readonly duration = duration;
-  private readonly timeZone = localTimeZone();
-
-  protected when(instant: string): string {
-    return formatInstant(instant, this.timeZone);
-  }
+  protected readonly duration = formatDuration;
+  protected readonly when = formatLocal;
 
   protected shorten(error: string): string {
     return error.length > 80 ? `${error.slice(0, 80)}…` : error;

@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Window } from '../../api/models';
+import { localTimeZone } from '../../shared/format';
 import { provideDayFirstDates } from '../../shared/forms/day-first-dates';
 import {
   AnalyticsFilter,
@@ -12,6 +13,7 @@ import {
   MAX_DAYS,
   PRESETS,
   TeamOption,
+  addDays,
   daysBetween,
   fromLocalDate,
   matchingPreset,
@@ -55,13 +57,9 @@ export class FilterBar {
   protected readonly custom = CUSTOM;
   protected readonly allTeams = ALL_TEAMS;
   protected readonly maxDate = computed(() => toLocalDate(this.today()));
-  protected readonly minDate = computed(() =>
-    toLocalDate(addDaysTo(this.today(), -(MAX_DAYS - 1))),
-  );
+  protected readonly minDate = computed(() => toLocalDate(addDays(this.today(), -(MAX_DAYS - 1))));
 
-  private readonly today = computed(() =>
-    todayIn(this.window()?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone),
-  );
+  private readonly today = computed(() => todayIn(this.window()?.timezone ?? localTimeZone()));
 
   /** What the date fields show: the URL's range, else the loaded window. Edited until both ends are set. */
   protected readonly start = linkedSignal(
@@ -136,10 +134,4 @@ export class FilterBar {
 
 function toDate(day: string | null): Date | null {
   return day === null ? null : toLocalDate(day);
-}
-
-function addDaysTo(day: string, days: number): string {
-  const date = toLocalDate(day);
-  date.setDate(date.getDate() + days);
-  return fromLocalDate(date);
 }

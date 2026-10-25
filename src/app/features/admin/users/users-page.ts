@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, linkedSignal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,22 +14,21 @@ import { Params, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Api } from '../../../api/api';
 import { deleteUser, listUsers, resetUserPassword, unlockUser } from '../../../api/functions';
-import { PageResponseUserAccountResponse, UserAccountResponse } from '../../../api/models';
+import { UserAccountResponse } from '../../../api/models';
 import { AuthService, Role } from '../../../core/auth/auth';
 import { describeError, handlesErrors } from '../../../core/http/api-error';
-import { apiResource } from '../../../core/http/api-resource';
+import { apiResource, keepLast } from '../../../core/http/api-resource';
 import { SearchField } from '../../../shared/components/search-field';
 import { confirmAction } from '../../../shared/dialogs/confirm-dialog';
-import { formatInstant } from '../../../shared/format';
+import { formatLocal } from '../../../shared/format';
 import {
   PAGE_SIZES,
-  listQueryParams,
   matSort,
   pagingParams,
   parseListState,
+  pageChange,
   sortChange,
 } from '../../../shared/list/list-state';
-import { localTimeZone } from '../../alerts/alert-format';
 import { TemporaryPasswordData, TemporaryPasswordDialog } from './temporary-password-dialog';
 import { ROLES, UserDialog, UserDialogData, UserDialogResult } from './user-dialog';
 import { UserTeamsDialog } from './user-teams-dialog';
@@ -95,13 +94,7 @@ export class UsersPage {
     ...(this.enabledFilter() !== null && { enabled: this.enabledFilter() === 'true' }),
     ...pagingParams(this.list()),
   }));
-  protected readonly data = linkedSignal<
-    PageResponseUserAccountResponse | undefined,
-    PageResponseUserAccountResponse | undefined
-  >({
-    source: () => (this.users.hasValue() ? this.users.value() : undefined),
-    computation: (value, previous) => value ?? previous?.value,
-  });
+  protected readonly data = keepLast(this.users);
   protected readonly error = computed(() => {
     const error = this.users.error();
     return error ? describeError(error) : null;
@@ -112,14 +105,13 @@ export class UsersPage {
   protected readonly pageSizes = PAGE_SIZES;
   protected readonly isLocked = isLocked;
   protected readonly myId = computed(() => this.auth.user()?.id ?? null);
-  private readonly timeZone = localTimeZone();
 
   protected roleLabel(role: Role): string {
     return ROLES.find((r) => r.value === role)?.label ?? role;
   }
 
   protected when(instant: string | null | undefined): string {
-    return instant ? formatInstant(instant, this.timeZone) : 'Never';
+    return instant ? formatLocal(instant) : 'Never';
   }
 
   /** The search box emits once the admin pauses typing. */
@@ -136,9 +128,7 @@ export class UsersPage {
   }
 
   protected paged(event: PageEvent): void {
-    this.navigate(
-      listQueryParams({ ...this.list(), page: event.pageIndex, size: event.pageSize }, USER_LIST),
-    );
+    this.navigate(pageChange(this.list(), event, USER_LIST));
   }
 
   protected async edit(user?: UserAccountResponse): Promise<void> {

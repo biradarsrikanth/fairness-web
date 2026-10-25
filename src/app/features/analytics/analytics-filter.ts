@@ -63,6 +63,15 @@ export function toQueryParams(filter: AnalyticsFilter): Params {
   };
 }
 
+/** The filter as link parameters, without the empty ones. */
+export function linkParams(filter: AnalyticsFilter): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(toQueryParams(filter)).filter(
+      (entry): entry is [string, string] => typeof entry[1] === 'string',
+    ),
+  );
+}
+
 /** Parameters for the gateway's analytics operations, leaving out the defaults. */
 export function toApiParams(filter: AnalyticsFilter): {
   team?: string;

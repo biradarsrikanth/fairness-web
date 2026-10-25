@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, linkedSignal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,19 +8,17 @@ import { MatSelectModule } from '@angular/material/select';
 import { Params, Router } from '@angular/router';
 import { listAuditEntries } from '../../../api/functions';
 import { ListAuditEntries$Params } from '../../../api/fn/audit/list-audit-entries';
-import { PageResponseAuditEntryResponse } from '../../../api/models';
 import { describeError } from '../../../core/http/api-error';
-import { apiResource } from '../../../core/http/api-resource';
+import { apiResource, keepLast } from '../../../core/http/api-resource';
 import { DateRangeField, DayRange } from '../../../shared/components/date-range-field';
-import { formatInstant } from '../../../shared/format';
+import { formatLocal } from '../../../shared/format';
 import {
   PAGE_SIZES,
-  listQueryParams,
+  pageChange,
   pagingParams,
   parseListState,
 } from '../../../shared/list/list-state';
 import { isIsoDay } from '../../analytics/analytics-filter';
-import { localTimeZone } from '../../alerts/alert-format';
 import { AUDIT_ACTIONS, AuditAction, actionLabel, detailPairs, isWarning } from './audit-actions';
 
 const AUDIT_LIST = { sortable: ['occurredAt'], defaultSort: 'occurredAt,desc' };
@@ -79,13 +77,7 @@ export class AuditPage {
     if (start && end) Object.assign(params, { start, end });
     return params;
   });
-  protected readonly data = linkedSignal<
-    PageResponseAuditEntryResponse | undefined,
-    PageResponseAuditEntryResponse | undefined
-  >({
-    source: () => (this.entries.hasValue() ? this.entries.value() : undefined),
-    computation: (value, previous) => value ?? previous?.value,
-  });
+  protected readonly data = keepLast(this.entries);
   protected readonly error = computed(() => {
     const error = this.entries.error();
     return error ? describeError(error) : null;
@@ -104,11 +96,7 @@ export class AuditPage {
   protected readonly actionLabel = actionLabel;
   protected readonly isWarning = isWarning;
   protected readonly detailPairs = detailPairs;
-  private readonly timeZone = localTimeZone();
-
-  protected when(instant: string): string {
-    return formatInstant(instant, this.timeZone);
-  }
+  protected readonly when = formatLocal;
 
   protected actionsIn(group: string) {
     return this.actions.filter((a) => a.group === group);
@@ -131,9 +119,7 @@ export class AuditPage {
   }
 
   protected paged(event: PageEvent): void {
-    this.navigate(
-      listQueryParams({ ...this.list(), page: event.pageIndex, size: event.pageSize }, AUDIT_LIST),
-    );
+    this.navigate(pageChange(this.list(), event, AUDIT_LIST));
   }
 
   private navigate(params: Params): void {

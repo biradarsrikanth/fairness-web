@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { ChartStub, snapshot } from '../../../testing/analytics';
+import { ChartStub, SEP, snapshot } from '../../../testing/analytics';
 import { settle, signIn } from '../../../testing/session';
 import { provideApiConfiguration } from '../../api/api-configuration';
 import { Role } from '../../core/auth/auth';
@@ -73,7 +73,7 @@ describe('AnalyticsPage', () => {
     request.flush(snapshot());
     await render();
 
-    expect(text(page)).toContain(`14 ${formatSep()} – 13 Oct 2026`);
+    expect(text(page)).toContain(`14 ${SEP} – 13 Oct 2026`);
     const tiles = Array.from(page.querySelectorAll('app-kpi-tiles li')).map((tile) => ({
       label: text(tile.querySelector('.label')!),
       value: text(tile.querySelector('.value')!),
@@ -212,10 +212,3 @@ describe('AnalyticsPage', () => {
     expect(text(page)).not.toContain("Each engineer's share");
   });
 });
-
-/** How this runtime's ICU abbreviates September in en-GB ("Sep" or "Sept"). */
-function formatSep(): string {
-  return new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' }).format(
-    new Date('2026-09-01T00:00:00Z'),
-  );
-}

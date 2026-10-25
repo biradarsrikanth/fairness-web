@@ -11,9 +11,8 @@ import { getSyncStatus, syncIncidents, syncOncalls } from '../../../api/function
 import { KindStatus, SyncRunResponse } from '../../../api/models';
 import { BACKGROUND, describeError, errorCode, handlesErrors } from '../../../core/http/api-error';
 import { apiResource } from '../../../core/http/api-resource';
-import { formatInstant } from '../../../shared/format';
-import { localTimeZone } from '../../alerts/alert-format';
-import { KIND_LABELS, ago, duration, runOutcome } from './sync-format';
+import { formatAgo, formatDuration, formatLocal } from '../../../shared/format';
+import { KIND_LABELS, runOutcome } from './sync-format';
 import { SyncRunsTable } from './sync-runs-table';
 import { WebhookEventsTable } from './webhook-events-table';
 
@@ -65,10 +64,10 @@ export class SyncPage {
 
   protected readonly backfillDays = BACKFILL_DAYS;
   protected readonly kindLabels = KIND_LABELS;
-  protected readonly ago = ago;
-  protected readonly duration = duration;
+  protected readonly ago = formatAgo;
+  protected readonly duration = formatDuration;
   protected readonly runOutcome = runOutcome;
-  private readonly timeZone = localTimeZone();
+  protected readonly when = formatLocal;
 
   constructor() {
     // Poll only while something runs (a scheduled sync, or one from another admin)
@@ -89,10 +88,6 @@ export class SyncPage {
 
   protected kindStatus(key: 'incidents' | 'oncalls'): KindStatus | null {
     return this.status.hasValue() ? (this.status.value()?.[key] ?? null) : null;
-  }
-
-  protected when(instant: string): string {
-    return formatInstant(instant, this.timeZone);
   }
 
   protected interval(seconds: number | null | undefined): string {

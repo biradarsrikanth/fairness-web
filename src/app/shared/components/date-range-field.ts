@@ -4,6 +4,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { fromLocalDate, toLocalDate } from '../../features/analytics/analytics-filter';
 import { provideDayFirstDates } from '../forms/day-first-dates';
 
 export interface DayRange {
@@ -12,16 +13,11 @@ export interface DayRange {
 }
 
 function toDate(day: string | null): Date | null {
-  if (day === null) return null;
-  const [year, month, date] = day.split('-').map(Number);
-  return new Date(year, month - 1, date);
+  return day === null ? null : toLocalDate(day);
 }
 
 function toDay(date: Date | null): string | null {
-  if (date === null) return null;
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
+  return date === null ? null : fromLocalDate(date);
 }
 
 /**

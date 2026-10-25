@@ -265,28 +265,21 @@ export function loadShareRows(
   engineers: readonly EngineerLoad[],
   limit = LOAD_SHARE_LIMIT,
 ): LoadRow[] {
-  const sorted = [...engineers].sort((a, b) => b.sharePct - a.sharePct);
-  const top: LoadRow[] = sorted.slice(0, limit).map((e) => ({
-    name: e.name,
-    sharePct: e.sharePct,
-    alertCount: e.alertCount,
-    oncallHours: e.oncallHours ?? null,
-    engineerId: e.engineerId,
-  }));
-  const rest = sorted.slice(limit);
-  // One engineer left over is drawn as themselves, not as "1 other"
-  if (rest.length <= 1) {
-    return sorted.map((e) => ({
+  const rows: LoadRow[] = [...engineers]
+    .sort((a, b) => b.sharePct - a.sharePct)
+    .map((e) => ({
       name: e.name,
       sharePct: e.sharePct,
       alertCount: e.alertCount,
       oncallHours: e.oncallHours ?? null,
       engineerId: e.engineerId,
     }));
-  }
+  const rest = rows.slice(limit);
+  // One engineer left over is drawn as themselves, not as "1 other"
+  if (rest.length <= 1) return rows;
   const share = rest.reduce((sum, e) => sum + e.sharePct, 0);
   return [
-    ...top,
+    ...rows.slice(0, limit),
     {
       name: `${rest.length} others`,
       sharePct: Math.round(share * 10) / 10,

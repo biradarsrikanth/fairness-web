@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, linkedSignal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,22 +8,20 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { Params, Router, RouterLink } from '@angular/router';
 import { getEngineer, listEngineers, listOncallShifts } from '../../api/functions';
-import { PageResponseOncallShiftResponse } from '../../api/models';
 import { AuthService } from '../../core/auth/auth';
 import { describeError } from '../../core/http/api-error';
-import { apiResource } from '../../core/http/api-resource';
+import { apiResource, keepLast } from '../../core/http/api-resource';
 import { DateRangeField, DayRange } from '../../shared/components/date-range-field';
-import { formatInstant } from '../../shared/format';
+import { formatLocal, localTimeZone } from '../../shared/format';
 import {
   PAGE_SIZES,
-  listQueryParams,
   matSort,
   pagingParams,
   parseListState,
+  pageChange,
   sortChange,
 } from '../../shared/list/list-state';
 import { addDays, todayIn } from '../analytics/analytics-filter';
-import { localTimeZone } from '../alerts/alert-format';
 import {
   MAX_RANGE_DAYS,
   isCurrent,
@@ -83,13 +81,7 @@ export class OncallPage {
     const engineerId = this.engineer();
     return { start, end, ...(engineerId !== null && { engineerId }), ...pagingParams(this.list()) };
   });
-  protected readonly data = linkedSignal<
-    PageResponseOncallShiftResponse | undefined,
-    PageResponseOncallShiftResponse | undefined
-  >({
-    source: () => (this.shifts.hasValue() ? this.shifts.value() : undefined),
-    computation: (value, previous) => value ?? previous?.value,
-  });
+  protected readonly data = keepLast(this.shifts);
   protected readonly error = computed(() => {
     const error = this.shifts.error();
     return error ? describeError(error) : null;
@@ -151,12 +143,8 @@ export class OncallPage {
   protected readonly levelLabel = levelLabel;
   protected readonly isCurrent = isCurrent;
   protected readonly shiftLength = shiftLength;
-  private readonly timeZone = localTimeZone();
-  protected readonly timeZoneName = this.timeZone;
-
-  protected when(instant: string): string {
-    return formatInstant(instant, this.timeZone);
-  }
+  protected readonly timeZoneName = localTimeZone();
+  protected readonly when = formatLocal;
 
   protected setRange(range: DayRange): void {
     this.navigate({ start: range.start, end: range.end, page: null });
@@ -175,9 +163,7 @@ export class OncallPage {
   }
 
   protected paged(event: PageEvent): void {
-    this.navigate(
-      listQueryParams({ ...this.list(), page: event.pageIndex, size: event.pageSize }, SHIFT_LIST),
-    );
+    this.navigate(pageChange(this.list(), event, SHIFT_LIST));
   }
 
   private navigate(params: Params): void {

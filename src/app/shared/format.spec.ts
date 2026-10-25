@@ -1,5 +1,6 @@
 import {
   formatAgo,
+  formatDuration,
   formatCount,
   formatDay,
   formatInstant,
@@ -63,5 +64,14 @@ describe('formatAgo', () => {
 
   it('shows a dash for an unreadable time', () => {
     expect(formatAgo('not a time', now)).toBe('–');
+  });
+});
+
+describe('formatDuration', () => {
+  it('reads milliseconds, seconds and minutes', () => {
+    expect(formatDuration(850)).toBe('850 ms');
+    expect(formatDuration(12_400)).toBe('12.4 s');
+    expect(formatDuration(185_000)).toBe('3 min 5 s');
+    expect(formatDuration(null)).toBe('–');
   });
 });

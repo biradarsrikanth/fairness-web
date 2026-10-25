@@ -1,3 +1,4 @@
+import { PageEvent } from '@angular/material/paginator';
 import { Sort, SortDirection } from '@angular/material/sort';
 import { Params } from '@angular/router';
 
@@ -66,4 +67,9 @@ export function matSort(state: ListState): { active: string; direction: SortDire
 export function sortChange(sort: Sort, config: ListConfig): Params {
   const value = sort.direction ? `${sort.active},${sort.direction}` : config.defaultSort;
   return { sort: value === config.defaultSort ? null : value, page: null };
+}
+
+/** A paginator change as query parameters. */
+export function pageChange(state: ListState, event: PageEvent, config: ListConfig): Params {
+  return listQueryParams({ ...state, page: event.pageIndex, size: event.pageSize }, config);
 }

@@ -10,7 +10,8 @@ import {
   periodLabel,
   timeOfDayOption,
 } from './chart-options';
-import { CONSOLE, EMPTY_CELL, PAPER, SEVERITY_COLORS } from './palette';
+import { CONSOLE, PAPER } from './palette';
+import { SEP } from '../../../../testing/analytics';
 
 const window = { start: '2026-09-01', end: '2026-09-30', timezone: 'Asia/Kolkata' };
 const none = { p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, other: 0 };
@@ -34,7 +35,7 @@ describe('chart options', () => {
     it('stacks only the severities that occur, each in its own fixed color', () => {
       const option: Loose = alertsOverTimeOption(series);
       expect(option.series.map((s: Loose) => s.name)).toEqual(['P1', 'P3']);
-      expect(option.series[1].color).toBe(SEVERITY_COLORS.p3);
+      expect(option.series[1].color).toBe(PAPER.severity.p3);
       expect(option.series[0].stack).toBe(option.series[1].stack);
       expect(option.xAxis.data).toEqual(['5 Oct', '12 Oct']);
     });
@@ -87,7 +88,7 @@ describe('chart options', () => {
     ];
     // Midnight in India is the evening before in UTC; the labels must still name the Monday
     const option: Loose = giniTrendOption(periods, 'week', 'Asia/Kolkata');
-    expect(option.xAxis.data).toEqual(['7 Sept', '14 Sept'].map((l) => l.replace('Sept', sep())));
+    expect(option.xAxis.data).toEqual(['7 Sept', '14 Sept'].map((l) => l.replace('Sept', SEP)));
     expect(option.series[0].data.map((d: Loose) => d.symbol)).toEqual(['circle', 'emptyCircle']);
     expect(option.series[0].markLine.data.map((d: Loose) => d.yAxis)).toEqual([0.2, 0.4, 0.6]);
     expect(option.yAxis.max).toBe(0.9);
@@ -128,7 +129,7 @@ describe('chart options', () => {
       [23, 6, 4],
     ]);
     expect(option.visualMap.min).toBe(1);
-    expect(option.visualMap.outOfRange.color).toBe(EMPTY_CELL);
+    expect(option.visualMap.outOfRange.color).toBe(PAPER.emptyCell);
     expect(option.tooltip.formatter({ value: [23, 6, 4] })).toContain('Sun 23:00–00:00');
   });
 
@@ -200,10 +201,3 @@ describe('chart options', () => {
     );
   });
 });
-
-/** How this runtime's ICU abbreviates September in en-GB ("Sep" or "Sept"). */
-function sep(): string {
-  return new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' }).format(
-    new Date('2026-09-01T00:00:00Z'),
-  );
-}

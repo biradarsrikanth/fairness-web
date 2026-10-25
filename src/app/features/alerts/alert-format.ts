@@ -14,11 +14,6 @@ export function elapsed(from: string | null | undefined, to: string | null | und
   return formatMinutes(minutesBetween(from, to));
 }
 
-/** The browser's timezone: lists show times where the reader is. */
-export function localTimeZone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
-}
-
 /** The tag style for a severity: P1 in solid red, P2 in solid accent, the rest soft. */
 export function severityClass(severity: string): string {
   switch (severity.toUpperCase()) {

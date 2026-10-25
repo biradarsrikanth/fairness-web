@@ -20,7 +20,14 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { filter, map } from 'rxjs';
-import { formatAgo, formatCount, formatMinutes, formatPct, formatRange } from '../../shared/format';
+import {
+  formatAgo,
+  formatCount,
+  formatMinutes,
+  formatPct,
+  formatRange,
+  localTimeZone,
+} from '../../shared/format';
 import { AuthService, Role } from '../auth/auth';
 import { LoadingService } from '../http/loading';
 import { ApiTelemetry } from '../http/telemetry';
@@ -185,7 +192,7 @@ export class Shell {
         return 'Offline';
     }
   });
-  protected readonly timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  protected readonly timeZone = localTimeZone();
   protected readonly shortcut =
     typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
       ? '⌘K'

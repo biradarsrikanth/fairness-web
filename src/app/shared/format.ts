@@ -65,6 +65,25 @@ export function formatInstant(instant: string, timeZone: string): string {
   }).format(new Date(instant));
 }
 
+/** The browser's timezone: lists show times where the reader is. */
+export function localTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+/** An instant in the browser's timezone. */
+export function formatLocal(instant: string): string {
+  return formatInstant(instant, localTimeZone());
+}
+
+/** 850 ms, 12.4 s, 3 min 5 s; a dash for no value */
+export function formatDuration(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined) return '–';
+  if (ms < 1000) return `${ms} ms`;
+  if (ms < 60_000) return `${(ms / 1000).toFixed(1)} s`;
+  const seconds = Math.round(ms / 1000);
+  return `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
+}
+
 /** 45 s, 12 min, 1 h 5 min, 2 d 3 h; a dash for no value */
 export function formatMinutes(minutes: number | null | undefined): string {
   if (minutes === null || minutes === undefined) return '–';
